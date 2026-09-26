@@ -1,0 +1,58 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. Warm neutral base, calm teal accent, soft status hues (no alarm red). */
+:root {
+  --bg: 249 250 249;        /* warm off-white */
+  --surface: 255 255 255;
+  --elevated: 255 255 255;
+  --border: 229 231 229;
+  --text: 24 33 33;
+  --muted: 100 116 116;
+  --accent: 13 148 136;     /* teal-600 */
+  --accent-soft: 204 240 235;
+  --steady: 13 148 136;     /* teal */
+  --building: 202 138 4;    /* amber-600 */
+  --headsup: 217 119 6;     /* warm amber-orange, not red */
+}
+
+:root[data-theme="dark"] {
+  --bg: 12 20 20;
+  --surface: 20 30 30;
+  --elevated: 26 38 38;
+  --border: 40 54 54;
+  --text: 233 240 238;
+  --muted: 148 168 165;
+  --accent: 45 212 191;     /* teal-400 */
+  --accent-soft: 19 60 56;
+  --steady: 45 212 191;
+  --building: 234 179 8;
+  --headsup: 251 146 60;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}

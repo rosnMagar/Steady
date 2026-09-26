@@ -1,0 +1,10 @@
+{
+  "person_id": "p_roshan",
+  "date": "2026-10-03",
+  "steps": 7412,
+  "resting_hr": 58,
+  "hrv_ms": 46,
+  "sleep_minutes": 401,
+  "active_energy_kcal": 512,
+  "source": "apple_watch"
+}

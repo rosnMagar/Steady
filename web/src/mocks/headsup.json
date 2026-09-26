@@ -1,0 +1,27 @@
+{
+  "person_id": "p_demo",
+  "status": "heads_up",
+  "note": "The next few days look like they could weigh on you more than usual — your sleep has dipped and your resting heart rate has crept up. That is a common pattern when caregiving gets heavier. It might be a good moment to line up a little support before things pile up.",
+  "note_disclaimer": "AI-written, not medical advice.",
+  "programs": [
+    {
+      "program_id": "arch_respite",
+      "name": "ARCH National Respite Locator",
+      "org": "ARCH National Respite Network",
+      "why": "Your sleep is slipping — a few hours of respite care could give you a real break.",
+      "phone": "",
+      "url": "https://archrespite.org/caregiver-resources/respitelocator",
+      "tags": ["respite", "local_services"]
+    },
+    {
+      "program_id": "can_helpdesk",
+      "name": "National Caregiver Help Desk",
+      "org": "Caregiver Action Network",
+      "why": "A free, person-to-person help desk to talk through what you need right now.",
+      "phone": "1-855-227-3640",
+      "url": "https://www.caregiveraction.org/helpdesk",
+      "tags": ["navigation", "peer_support", "education"]
+    }
+  ],
+  "crisis_note": "If you are in crisis or thinking about harming yourself, call or text 988 anytime."
+}

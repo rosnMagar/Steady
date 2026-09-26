@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+snowflake-connector-python[pandas]
+pandas
+scikit-learn
+lightgbm
+pydantic
+python-dotenv
+pytest
+httpx

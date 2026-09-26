@@ -1,0 +1,23 @@
+{
+  "n_participants": 71,
+  "n_participants_used": 63,
+  "date_range": "2021-04-08 to 2022-01-22",
+  "disclosure": "Steady's model is trained on LifeSnaps, a public dataset of general Fitbit wearers, not family caregivers. 'Strain' is a proxy learned from validated self-reported mood/stress. The live Apple Watch participant demonstrates the pipeline end to end and is not model validation. Steady is a support tool, not a diagnostic device.",
+  "data_sources": [
+    { "name": "LifeSnaps (Zenodo 6832242)", "use": "Training and backtest: daily Fitbit signals + SEMA/PANAS/STAI self-reports", "license": "CC BY 4.0" },
+    { "name": "Apple Watch (builder)", "use": "Live N=1 pilot participant via iPhone Shortcuts", "license": "self-provided" },
+    { "name": "Support programs", "use": "Curated, verified real programs Cortex is restricted to cite", "license": "public" }
+  ],
+  "backtest": [
+    { "metric": "Strain score MAE", "model": null, "naive_baseline": null, "unit": "points (0-100)", "note": "populated by src/backtest.py — not yet run" },
+    { "metric": "Heads-up alert precision", "model": null, "naive_baseline": null, "unit": "fraction", "note": "populated by src/backtest.py" },
+    { "metric": "Heads-up alert recall", "model": null, "naive_baseline": null, "unit": "fraction", "note": "populated by src/backtest.py" },
+    { "metric": "Median lead time", "model": null, "naive_baseline": null, "unit": "days", "note": "populated by src/backtest.py" }
+  ],
+  "known_limitations": [
+    "Small sample (63 usable participants) — metrics are indicative, not definitive.",
+    "Wearable coverage is partial (HRV ~33%, sleep ~48%), so some features are sparse.",
+    "Apple Watch HRV (SDNN) is not directly comparable to LifeSnaps HRV (RMSSD).",
+    "Participation bias: wearable owners skew younger and higher-income."
+  ]
+}

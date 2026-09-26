@@ -1,0 +1,12 @@
+{
+  "staffing_hint": "Expect 5-8 caregivers likely to need outreach this week, peaking mid-week.",
+  "days": [
+    { "date": "2026-10-04", "projected": 5, "lower": 3, "upper": 7 },
+    { "date": "2026-10-05", "projected": 6, "lower": 4, "upper": 9 },
+    { "date": "2026-10-06", "projected": 8, "lower": 5, "upper": 11 },
+    { "date": "2026-10-07", "projected": 7, "lower": 4, "upper": 10 },
+    { "date": "2026-10-08", "projected": 6, "lower": 3, "upper": 9 },
+    { "date": "2026-10-09", "projected": 5, "lower": 3, "upper": 8 },
+    { "date": "2026-10-10", "projected": 4, "lower": 2, "upper": 7 }
+  ]
+}

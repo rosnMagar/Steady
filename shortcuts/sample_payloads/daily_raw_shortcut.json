@@ -1,0 +1,16 @@
+{
+  "_comment": "ACTUAL payload captured from the iPhone Shortcut on 2026-09-26 (real Apple Watch data). The server normalizes this into RAW_DAILY: date -> date only; resting_heart_rate string -> float; sleep_raw intervals -> sleep_minutes (sum of Core+REM+Deep durations). HRV and active energy were not sent by this shortcut version.",
+  "date": "2026-09-26T13:46:53-05:00",
+  "person_id": "p_roshan",
+  "source": "apple_watch",
+  "steps": 17030,
+  "resting_heart_rate": "61",
+  "sleep_raw": [
+    { "start": "Sep 26, 2026 at 1:16 AM", "end": "Sep 26, 2026 at 1:33 AM", "value": "Core" },
+    { "start": "Sep 26, 2026 at 1:33 AM", "end": "Sep 26, 2026 at 1:35 AM", "value": "Deep" },
+    { "start": "Sep 26, 2026 at 2:13 AM", "end": "Sep 26, 2026 at 2:35 AM", "value": "Deep" },
+    { "start": "Sep 26, 2026 at 3:49 AM", "end": "Sep 26, 2026 at 4:11 AM", "value": "REM" },
+    { "start": "Sep 26, 2026 at 6:00 AM", "end": "Sep 26, 2026 at 6:53 AM", "value": "Core" },
+    { "start": "Sep 26, 2026 at 8:04 AM", "end": "Sep 26, 2026 at 8:18 AM", "value": "Core" }
+  ]
+}

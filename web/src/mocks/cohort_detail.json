@@ -1,0 +1,31 @@
+{
+  "person_id": "p_demo",
+  "name": "Maria R.",
+  "status": "heads_up",
+  "region": "63101",
+  "strain_now": 61,
+  "baseline": 42,
+  "series": [
+    { "date": "2026-09-29", "actual": 47, "forecast": null, "lower": null, "upper": null },
+    { "date": "2026-09-30", "actual": 52, "forecast": null, "lower": null, "upper": null },
+    { "date": "2026-10-01", "actual": 55, "forecast": null, "lower": null, "upper": null },
+    { "date": "2026-10-02", "actual": 58, "forecast": null, "lower": null, "upper": null },
+    { "date": "2026-10-03", "actual": 61, "forecast": 61, "lower": 61, "upper": 61 },
+    { "date": "2026-10-04", "actual": null, "forecast": 64, "lower": 55, "upper": 73 },
+    { "date": "2026-10-05", "actual": null, "forecast": 67, "lower": 56, "upper": 78 },
+    { "date": "2026-10-06", "actual": null, "forecast": 68, "lower": 55, "upper": 81 }
+  ],
+  "drivers": [
+    { "label": "Sleep", "detail": "down about 50 min vs her baseline", "direction": "worse" },
+    { "label": "Resting heart rate", "detail": "up 4 bpm over 3 days", "direction": "worse" }
+  ],
+  "manager_brief": "Maria's forecasted strain crosses her personal heads-up threshold on 3 of the next 5 days, driven mainly by declining sleep and a rising resting heart rate. She was not contacted in the last 30 days. Consider a check-in about respite options.",
+  "brief_disclaimer": "AI-written, not medical advice.",
+  "programs": [
+    { "program_id": "arch_respite", "name": "ARCH National Respite Locator", "org": "ARCH National Respite Network", "why": "Declining sleep — respite could give her a break.", "phone": "", "url": "https://archrespite.org/caregiver-resources/respitelocator", "tags": ["respite", "local_services"] },
+    { "program_id": "can_helpdesk", "name": "National Caregiver Help Desk", "org": "Caregiver Action Network", "why": "Person-to-person guidance on what she needs now.", "phone": "1-855-227-3640", "url": "https://www.caregiveraction.org/helpdesk", "tags": ["navigation", "peer_support"] }
+  ],
+  "contact_history": [
+    { "date": "2026-08-12", "by": "care_manager", "note": "Intro call, enrolled." }
+  ]
+}
