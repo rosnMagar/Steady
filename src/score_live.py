@@ -118,6 +118,33 @@ def person_risk(strain: pd.DataFrame, forecasts: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+HEADS_UP_RISK = 0.5  # mirrors server.config.HEADS_UP_RISK
+
+
+def person_alerts(strain: pd.DataFrame, forecasts: pd.DataFrame, risk: pd.DataFrame) -> pd.DataFrame:
+    """One ALERTS row per live person, using the SAME rule as server/repo.status_of so a live
+    participant flows into ALERTS -> BRIEFS exactly like the demo cohort (steady => no brief):
+    heads_up when risk >= HEADS_UP_RISK; building when the 7-day forecast peak reaches the person's
+    own p75; steady otherwise."""
+    risk_by = dict(zip(risk["person_id"], risk["risk"])) if not risk.empty else {}
+    rows = []
+    for pid, g in strain.groupby("person_id"):
+        fc = forecasts[forecasts["person_id"] == pid]
+        if fc.empty:
+            continue
+        p75 = float(g["strain_score"].quantile(0.75))
+        fpeak = float(fc["forecast"].max())
+        rk = risk_by.get(pid)
+        if rk is not None and rk >= HEADS_UP_RISK:
+            status, rule = "heads_up", f"7-day forecast risk {rk:.2f} >= {HEADS_UP_RISK}"
+        elif fpeak >= p75:
+            status, rule = "building", f"forecast peak {fpeak:.0f} >= personal p75 {p75:.0f}"
+        else:
+            status, rule = "steady", f"forecast peak {fpeak:.0f} < personal p75 {p75:.0f}"
+        rows.append({"person_id": pid, "date": g["date"].max(), "status": status, "rule": rule})
+    return pd.DataFrame(rows)
+
+
 # ── write (scoped to the live person_ids only) ───────────────────────────────
 def _replace_rows(table: str, person_ids: list[str], df: pd.DataFrame, table_cols: set[str]):
     """DELETE this table's rows for these people, then append df (only columns the table has)."""
@@ -196,11 +223,17 @@ def run(person_ids: list[str] | None = None, dry_run: bool = False) -> dict:
     rk_cols = _table_columns("RISK")
     _replace_rows("RISK", scored, risk, rk_cols)
 
+    alerts = person_alerts(strain, forecasts, risk)
+    al_cols = _table_columns("ALERTS")
+    _replace_rows("ALERTS", scored, alerts, al_cols)
+
+    status_by = dict(zip(alerts["person_id"], alerts["status"])) if not alerts.empty else {}
     print("done. forecast peak vs baseline per person:")
     for _, r in risk.iterrows():
-        print(f"  {r['person_id']}: risk={r['risk']}")
+        print(f"  {r['person_id']}: risk={r['risk']} status={status_by.get(r['person_id'], '?')}")
+    print("  (non-steady people are picked up by src.briefs.generate_batch for a Cortex brief)")
     return {"scored": scored, "skipped": skipped, "days": len(strain),
-            "forecasts": len(forecasts), "risk": len(risk)}
+            "forecasts": len(forecasts), "risk": len(risk), "alerts": len(alerts)}
 
 
 def main(argv: list[str]):

@@ -18,13 +18,15 @@ PROMPT = """You support family caregivers. Using ONLY the facts given, write a s
 
 Rules:
 - 3-4 sentences, plain language, second person ("you"). Caring, never alarming.
-- Describe their physical load this week from the drivers. Do NOT diagnose or give medical advice.
+- Describe the caregiver's OWN physical load this week using the wearable signals below (they describe
+  the caregiver, not anyone else). Do NOT diagnose or give medical advice.
 - Gently point them to the TWO recommended programs below, by NAME. Do not invent any other resource
   or any phone number.
 - Also write a one-sentence factual manager_brief for a care manager.
 Return ONLY valid JSON: {{"note": "...", "manager_brief": "..."}}
 
-CAREGIVER this week: status={status}, drivers={drivers}
+The caregiver's status this week: {status}
+Their own wearable signals this week: {drivers}
 
 RECOMMENDED PROGRAMS (mention both by name):
 {programs}
@@ -138,7 +140,8 @@ def generate_batch():
     print(f"wrote {len(rows)} brief rows to BRIEFS")
 
 
-if __name__ == "__main__":
+def _preview_one():
+    """Smoke test: generate + print a single brief without persisting."""
     top = query("SELECT person_id, status FROM ALERTS ORDER BY rule DESC").iloc[0]
     b = generate(top["PERSON_ID"], top["STATUS"])
     print("STATUS:", b["status"])
@@ -146,3 +149,14 @@ if __name__ == "__main__":
     print("PROGRAMS:", b["program_ids"], "| dropped invented:", b["_dropped_invented"])
     print("MANAGER:", b["manager_brief"])
     print("medical-phrase flagged:", b["_flagged_medical"])
+
+
+if __name__ == "__main__":
+    # Default: regenerate + persist every non-steady person's brief into BRIEFS.
+    #   .venv/bin/python -m src.briefs            # full batch (truncates + rebuilds BRIEFS)
+    #   .venv/bin/python -m src.briefs --preview  # print one brief, write nothing
+    import sys
+    if "--preview" in sys.argv:
+        _preview_one()
+    else:
+        generate_batch()
