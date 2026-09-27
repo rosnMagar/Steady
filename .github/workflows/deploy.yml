@@ -75,6 +75,8 @@ jobs:
             ./ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${APP_DIR}/"
 
       - name: Install backend deps + restart service on EC2
+        # Health check RETRIES for up to 60s — the app's lifespan makes Snowflake calls on boot
+        # (~3-4s cold), so a fixed short sleep races startup and fails a healthy deploy.
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
@@ -82,4 +84,5 @@ jobs:
               && (test -d .venv || python3 -m venv .venv) \
               && .venv/bin/pip install -q -r requirements.txt \
               && sudo systemctl restart steady \
-              && sleep 2 && curl -fsS http://localhost/health"
+              && timeout 60 bash -c 'until curl -fsS http://localhost/health >/dev/null; do sleep 2; done' \
+              && echo 'deploy healthy'"
