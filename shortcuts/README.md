@@ -53,33 +53,45 @@ can't be read — so we can drop those from the Apple Watch path.
 
 ---
 
-## Getting a public HTTPS URL for the phone (tunnel)
+## Where the phone POSTs (the deployed EC2 box)
 
-The iPhone can't reach `localhost` — the server needs a public HTTPS URL. Start the API, then open a
-tunnel to port 8000:
+The app is live on EC2 on a public IP, so the phone POSTs **straight to it over HTTP** — no tunnel
+needed. Use `http://<EC2_PUBLIC_IP>/ingest/...` as the base URL in the shortcuts below. The same URL
+opens the app for judges (the API also serves the built `web/dist`).
 
-```
-.venv/bin/uvicorn server.main:app --port 8000            # API + built UI (web/dist) on :8000
-cloudflared tunnel --url http://localhost:8000            # prints https://<random>.trycloudflare.com
-```
-
-That printed URL is your `<your-tunnel>` below — and, because the API also serves `web/dist`, the same
-URL opens the app for judges (build the UI first with `VITE_USE_API=1 npm --prefix web run build`).
-`ngrok http 8000` works the same way if you prefer. Quick tunnel URLs change on each restart, so
-re-paste it into the shortcuts if you restart. For a stable demo URL, use a named Cloudflare tunnel or
-deploy to Render/Fly.
+> HTTPS is a *later* nicety, not a requirement — iOS Shortcuts POST to plain HTTP fine. When you want
+> TLS, a Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:80`, outbound-only, free cert)
+> puts an `https://…trycloudflare.com` in front without opening ports; the local-dev tunnel workflow
+> (`--url http://localhost:8000`) still works if you're testing off-box before deploying.
 
 ## The two real shortcuts (build after the server is up)
 
-Replace the webhook.site URL with `https://<your-tunnel>/ingest/...` and the token with the real
-`INGEST_TOKEN` from `.env` (send it as the header `Authorization: Bearer <INGEST_TOKEN>`; the server
-accepts the token with or without a leading `Bearer `, so either form works).
+Point them at `http://<EC2_PUBLIC_IP>/ingest/...` and use the real `INGEST_TOKEN` from `.env` (send it
+as the header `Authorization: Bearer <INGEST_TOKEN>`; the server accepts the token with or without a
+leading `Bearer `, so either form works).
 
 1. **Daily Sync** (Automation, 9 PM): same as the spike but POST to `/ingest/daily`, and add
    `hrv_ms` (Heart Rate Variability) and `active_energy_kcal` (Active Energy) if available.
 2. **Backfill** (run once, manually): loop over the last 30–60 days building an array of daily
-   objects, POST to `/ingest/backfill`. Gives the model a baseline before demo day.
+   objects, POST to `/ingest/backfill`. Gives the model a baseline before demo day. **The pipeline
+   needs ≥ 30 usable days** before it will forecast a live person (fewer and they're skipped as
+   "baseline not ready").
 3. **Daily Check-in** (Automation, evening): **Ask for Input** (Number, "How heavy did today feel?
    1–5"), optionally **Choose from Menu** for tags, POST to `/ingest/checkin`.
+
+## Making the ingested data show up in the app (scoring step)
+
+Ingest only lands raw rows in `RAW_DAILY`. To turn them into a strain-score history + 7-day forecast +
+status so the participant actually appears in the UI, run the live scorer (from the repo, with
+Snowflake creds in `.env`):
+
+```
+.venv/bin/python -m src.score_live --dry-run     # preview: who has enough history, no writes
+.venv/bin/python -m src.score_live               # score + publish everyone with source='apple_watch'
+.venv/bin/python -m src.score_live p_roshan      # or a specific person_id
+```
+
+It's scoped — it only writes rows for the people it scores and never touches the demo cohort. Re-run
+it after each backfill / daily sync (or schedule it before the nightly `sql/05_tasks.sql` refresh).
 
 Sample payloads are in `sample_payloads/`.

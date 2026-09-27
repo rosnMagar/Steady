@@ -41,8 +41,11 @@ def add_load_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build() -> pd.DataFrame:
-    return add_load_index(build_features(load_daily()))
+def build(daily: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Load index over daily rows. Defaults to the LifeSnaps CSV; pass `daily` (same shape as
+    dataset.load_daily) to score live Apple Watch data through the identical feature pipeline."""
+    daily = daily if daily is not None else load_daily()
+    return add_load_index(build_features(daily))
 
 
 if __name__ == "__main__":

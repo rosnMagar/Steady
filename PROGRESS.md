@@ -26,9 +26,20 @@ Honest, non-diagnostic. Sponsor: Snowflake (ML.CLASSIFICATION + ML.FORECAST + Co
   mount + SPA fallback. Status retuned (risk bimodal -> building tier from forecast crossing personal p75).
 
 ## NEXT
-- Remaining Phase 4: Cloudflare tunnel + on-phone 30-60d backfill (need the device; hosting/tunnel
-  DOCUMENTED in shortcuts/README.md). sql/05_tasks.sql nightly Task is WRITTEN + validated read-only,
-  NOT applied (retrains models = credits; the ingest->features->strain step is Python, schedule it too).
+- NEW: **src/score_live.py** — the RAW_DAILY(live) -> features/load-index -> STRAIN_SCORE -> ML.FORECAST
+  -> RISK runner that makes an ingesting Apple Watch participant appear in the app. Reuses the exact
+  demo feature code (build_features/load_index; load_index.build(daily=) + prep_series(indexed=) now
+  accept injected data). SCOPED: only writes rows for the person_ids it scores; never touches the demo
+  cohort. Honest framing: does NOT run the Fitbit-trained classifier on watch data — live status comes
+  from the person's OWN forecast (building = crosses personal p75, heads_up = reaches p90). Offline
+  tests in tests/test_score_live.py (5, all pass). Dry-run verified vs live Snowflake: p_roshan already
+  ingesting but <30 days, correctly skipped. Run `.venv/bin/python -m src.score_live` after backfill.
+  NOTE: stray `Steady/` nested checkout (gitlink, no .gitmodules — from the /opt/Steady deploy work) was
+  breaking local pytest; added pytest.ini `norecursedirs` to exclude it. Worth cleaning up in git.
+- Remaining Phase 4: on-phone 30-60d backfill (need the device; phone now POSTs straight to the EC2
+  public IP over HTTP — tunnel no longer needed for ingest, see shortcuts/README.md). sql/05_tasks.sql
+  nightly Task is WRITTEN + validated read-only, NOT applied (retrains models = credits; schedule the
+  score_live Python step before it).
 - Phase 5 write-path wiring: "Draft outreach" (real Cortex) + "Mark contacted" (persists to store) now
   wired in CaregiverDrawer via api.outreachDraft/markContacted — VERIFIED in-browser end-to-end.
   Still a stub: caregiver Heads-up "Not helpful" feedback (api.feedback / POST .../feedback not wired).
