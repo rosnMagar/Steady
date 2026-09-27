@@ -55,7 +55,7 @@ export function ManagerLayout() {
         </div>
       </header>
       <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "1.5rem" }}>
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
             <Outlet />
           </PageTransition>

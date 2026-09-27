@@ -32,7 +32,7 @@ export function CaregiverLayout() {
         </header>
 
         <main style={{ flex: 1, padding: "1.25rem 1.25rem 6rem" }}>
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
               <Outlet />
             </PageTransition>
