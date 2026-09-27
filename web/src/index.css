@@ -26,6 +26,20 @@
   --steady-ink: 35 120 4;
   --building-ink: 140 96 0;
   --headsup-ink: 178 60 0;
+
+  /* ── Motion tokens ──────────────────────────────────────────────────────
+     Three durations, three easings — deliberately few, so motion stays
+     consistent instead of every component inventing its own timing.
+     fast  = micro-interactions (hover, press, colour shifts)
+     base  = cards, expands, entrances
+     slow  = route/page-level transitions
+     Entering uses ease-out, leaving uses ease-in, on-screen moves ease-in-out. */
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 360ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root[data-theme="dark"] {
@@ -64,7 +78,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
+    /* Delay matters too: a staggered `both`-filled animation would otherwise hold its
+       "from" state (invisible) for the full delay before snapping in. */
+    animation-delay: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -110,10 +129,28 @@ body {
   border-radius: 8px;
   box-shadow: none;
 }
-.app-card.interactive { transition: box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
+/* Every card eases its surface colours so the light/dark flip doesn't snap. */
+.app-card {
+  transition: background var(--dur-base) var(--ease-inout),
+              border-color var(--dur-base) var(--ease-inout);
+}
+
+/* Only genuinely clickable cards lift — the affordance has to mean something. */
+.app-card.interactive {
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
 .app-card.interactive:hover {
-  box-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.16), 0 3px 6px 0 rgb(0 0 0 / 0.12);
-  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px -2px rgb(0 0 0 / 0.18), 0 8px 16px -4px rgb(0 0 0 / 0.16);
+  border-color: rgb(var(--accent) / 0.35);
+}
+/* Press settles back down and compresses slightly — mimics a physical push. */
+.app-card.interactive:active {
+  transform: translateY(0) scale(0.995);
+  transition-duration: 80ms;
 }
 
 .min-tap { min-height: 44px; }
@@ -150,6 +187,27 @@ body {
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .chip:hover { background: rgb(var(--accent) / 0.08); }
+.chip:active { transform: scale(0.96); transition-duration: 80ms; }
+
+/* Press feedback on every Ant Design button, so taps feel acknowledged. */
+.ant-btn { transition: transform var(--dur-fast) var(--ease-out); }
+.ant-btn:not(:disabled):active { transform: scale(0.97); }
+
+/* Staggered entrance for a page's cards: a short cascade reads as "this loaded"
+   without delaying anything the user needs to act on. Capped at 8 so a long list
+   never leaves the last item waiting. */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.stagger > * { animation: card-in var(--dur-base) var(--ease-out) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
+.stagger > *:nth-child(5) { animation-delay: 180ms; }
+.stagger > *:nth-child(6) { animation-delay: 225ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 260ms; }
 
 /* Single-row, swipeable filter strip. Scrollbar hidden but scrolling still works. */
 .chip-scroller {

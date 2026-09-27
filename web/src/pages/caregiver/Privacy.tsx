@@ -77,7 +77,7 @@ export function Privacy() {
 
   return (
     <Section>
-      <Flex vertical gap={20}>
+      <Flex vertical gap={20} className="stagger">
         <h1 className="text-2xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>Your data, your call</h1>
 
         <Card className="p-4">

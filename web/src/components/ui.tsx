@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { ReactNode, useEffect, useState } from "react";
+import { motion, useReducedMotion, animate } from "framer-motion";
 import { Button as AntButton, Tag, Statistic } from "antd";
 import type { Status } from "../api/types";
 import { STATUS } from "../lib/status";
@@ -71,18 +71,44 @@ export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm
   );
 }
 
+/** Counts a number up to its final value on mount. Purely decorative, so it snaps straight to the
+ *  answer when the user prefers reduced motion — a KPI must never be slower to read than it is now. */
+function CountUp({ to }: { to: number }) {
+  const reduce = useReducedMotion();
+  const [n, setN] = useState(reduce ? to : 0);
+  useEffect(() => {
+    if (reduce) {
+      setN(to);
+      return;
+    }
+    const controls = animate(0, to, {
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setN(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [to, reduce]);
+  return <>{n}</>;
+}
+
 export function StatTile({ label, value, tone }: { label: string; value: ReactNode; tone?: Status }) {
   const color = tone ? `rgb(var(--${STATUS[tone].colorVar}-ink))` : "rgb(var(--text))";
   // antd's Statistic only renders string|number itself; anything richer has to go through
   // `formatter`, otherwise a ReactNode stringifies to "[object Object]".
   const isNode = typeof value !== "string" && typeof value !== "number";
+  // Plain integers count up; anything else renders as-is through the formatter.
+  const isCountable = typeof value === "number" && Number.isFinite(value);
   return (
     // height:100% so tiles in a Row align="stretch" line up even when a label wraps on mobile.
     <Card className="p-4" style={{ height: "100%" }}>
       <Statistic
         title={<span className="t-muted text-sm">{label}</span>}
         value={isNode ? "" : (value as string | number)}
-        formatter={isNode ? () => value : undefined}
+        formatter={
+          isCountable ? () => <CountUp to={value as number} />
+            : isNode ? () => value
+            : undefined
+        }
         valueStyle={{ color, fontSize: "1.5rem", fontWeight: 600 }}
       />
     </Card>

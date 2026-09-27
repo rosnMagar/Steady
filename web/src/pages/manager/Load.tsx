@@ -98,7 +98,7 @@ export function Load() {
 
   return (
     <Section>
-      <Flex vertical gap={20}>
+      <Flex vertical gap={20} className="stagger">
         <div>
           <h1 className="text-2xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>Projected weekly load</h1>
           <p className="text-sm t-muted" style={{ margin: 0 }}>Caregivers likely to need outreach each day, with a likely range and who's driving it.</p>

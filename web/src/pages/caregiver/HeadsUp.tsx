@@ -228,7 +228,7 @@ export function HeadsUp() {
 
   return (
     <Section>
-      <Flex vertical gap={20}>
+      <Flex vertical gap={20} className="stagger">
         <h1 className="text-2xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>
           {steady ? "Support, whenever you need it" : "A little support"}
         </h1>

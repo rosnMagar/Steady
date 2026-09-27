@@ -50,7 +50,7 @@ export function Cohort() {
 
   return (
     <Section>
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div>
           <h1 className="text-2xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>Your caregivers</h1>
           <p className="text-sm t-muted" style={{ margin: 0 }}>Ranked by forecasted strain over the next 7 days.</p>

@@ -55,7 +55,7 @@ export function Today() {
   const meta = STATUS[data.status];
   return (
     <Section>
-      <Flex vertical gap={20}>
+      <Flex vertical gap={20} className="stagger">
         <div>
           <div className="text-sm t-muted">Hi {data.name}, here's your week</div>
           <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: 12 }}>
