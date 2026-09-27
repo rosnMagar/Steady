@@ -104,7 +104,7 @@ export function Load() {
         ) : (
           <>
             {/* KPI row */}
-            <Row gutter={[12, 12]}>
+            <Row gutter={[12, 12]} align="stretch">
               <Col xs={12} md={6}><StatTile label="Projected this week" value={data.projected_total} /></Col>
               <Col xs={12} md={6}>
                 <StatTile label="Peak day" value={peakDay ? `${peakDay.projected} · ${fmtDate(peakDay.date)}` : "—"} tone="heads_up" />

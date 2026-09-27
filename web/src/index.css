@@ -11,12 +11,21 @@
   --elevated: 255 255 255;
   --border: 217 217 217;    /* colorBorder #d9d9d9 */
   --text: 31 31 31;         /* colorText */
-  --muted: 140 140 140;     /* colorTextSecondary #8c8c8c */
+  --muted: 89 89 89;        /* colorTextSecondary #595959 — 7.0:1 on white (was #8c8c8c, 3.4:1) */
   --accent: 22 119 255;     /* AntD primary #1677ff */
   --accent-soft: 230 244 255; /* #e6f4ff */
   --steady: 82 196 26;      /* success #52c41a */
   --building: 250 173 20;   /* warning #faad14 */
   --headsup: 250 140 22;    /* orange #fa8c16 */
+
+  /* "Ink" = the same hues darkened enough to be READ as text on a light surface.
+     The plain tokens above stay tuned for fills (chart bars, chips, dots), where the
+     bright hues belong; every text usage goes through -ink so nothing drops below
+     WCAG AA 4.5:1. On white: accent 6.2:1, steady 5.6:1, building 5.5:1, headsup 5.9:1. */
+  --accent-ink: 9 88 217;
+  --steady-ink: 35 120 4;
+  --building-ink: 140 96 0;
+  --headsup-ink: 178 60 0;
 }
 
 :root[data-theme="dark"] {
@@ -31,6 +40,13 @@
   --steady: 73 170 25;
   --building: 216 150 20;
   --headsup: 216 122 22;
+
+  /* On #141414 the status hues already clear AA (5.9–7.3:1), so ink matches the fill.
+     Only the primary blue needed lifting: #1668dc was 3.6:1, #5aa2ff is 7.1:1. */
+  --accent-ink: 90 162 255;
+  --steady-ink: 73 170 25;
+  --building-ink: 216 150 20;
+  --headsup-ink: 216 122 22;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -60,10 +76,10 @@ body {
 /* ── App helper classes (token-driven; used alongside Ant Design components) ── */
 .t-text     { color: rgb(var(--text)); }
 .t-muted    { color: rgb(var(--muted)); }
-.t-accent   { color: rgb(var(--accent)); }
-.t-steady   { color: rgb(var(--steady)); }
-.t-building { color: rgb(var(--building)); }
-.t-headsup  { color: rgb(var(--headsup)); }
+.t-accent   { color: rgb(var(--accent-ink)); }
+.t-steady   { color: rgb(var(--steady-ink)); }
+.t-building { color: rgb(var(--building-ink)); }
+.t-headsup  { color: rgb(var(--headsup-ink)); }
 
 .text-xs  { font-size: 0.75rem; }
 .text-sm  { font-size: 0.875rem; }

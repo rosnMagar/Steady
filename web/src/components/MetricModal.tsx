@@ -36,7 +36,7 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
       <div className="text-sm t-muted">
         Now <span className="font-medium t-text">{fmtValue(metric.key, metric.latest)}{unitSuffix}</span>
         {hasBaseline && <>{" · "}usual {fmtValue(metric.key, metric.baseline as number)}{unitSuffix}</>}
-        {" · "}<span style={{ color: `rgb(var(--${tone === "worse" ? "headsup" : tone === "better" ? "steady" : "muted"}))` }}>{position}</span>
+        {" · "}<span style={{ color: `rgb(var(--${tone === "worse" ? "headsup-ink" : tone === "better" ? "steady-ink" : "muted"}))` }}>{position}</span>
       </div>
 
       <div style={{ marginTop: "0.75rem" }}>

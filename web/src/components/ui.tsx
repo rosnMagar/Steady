@@ -63,7 +63,7 @@ export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm
     <Tag
       bordered={false}
       className="status-chip"
-      style={{ fontSize, padding: pad, margin: 0, color: `rgb(var(--${m.colorVar}))`, backgroundColor: `rgb(var(--${m.colorVar}) / 0.12)` }}
+      style={{ fontSize, padding: pad, margin: 0, color: `rgb(var(--${m.colorVar}-ink))`, backgroundColor: `rgb(var(--${m.colorVar}) / 0.12)` }}
     >
       <span style={{ height: 6, width: 6, borderRadius: 9999, backgroundColor: `rgb(var(--${m.colorVar}))` }} />
       {m.label}
@@ -72,12 +72,17 @@ export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm
 }
 
 export function StatTile({ label, value, tone }: { label: string; value: ReactNode; tone?: Status }) {
-  const color = tone ? `rgb(var(--${STATUS[tone].colorVar}))` : "rgb(var(--text))";
+  const color = tone ? `rgb(var(--${STATUS[tone].colorVar}-ink))` : "rgb(var(--text))";
+  // antd's Statistic only renders string|number itself; anything richer has to go through
+  // `formatter`, otherwise a ReactNode stringifies to "[object Object]".
+  const isNode = typeof value !== "string" && typeof value !== "number";
   return (
-    <Card className="p-4">
+    // height:100% so tiles in a Row align="stretch" line up even when a label wraps on mobile.
+    <Card className="p-4" style={{ height: "100%" }}>
       <Statistic
         title={<span className="t-muted text-sm">{label}</span>}
-        value={value as string | number}
+        value={isNode ? "" : (value as string | number)}
+        formatter={isNode ? () => value : undefined}
         valueStyle={{ color, fontSize: "1.5rem", fontWeight: 600 }}
       />
     </Card>

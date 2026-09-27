@@ -8,7 +8,8 @@ import { fmtDate } from "../lib/status";
 import { fmtValue, UNIT_IN_VALUE } from "../lib/metricFormat";
 import { MetricModal } from "./MetricModal";
 
-const dirColorToken = { worse: "headsup", better: "steady", steady: "muted" } as const;
+// -ink variants: these render as small (0.75rem) text, so they must clear AA contrast.
+const dirColorToken = { worse: "headsup-ink", better: "steady-ink", steady: "muted" } as const;
 
 /** One metric: latest value, the person's own baseline, and a small baseline-referenced sparkline.
  * Clickable — opens an enlarged, interactive chart. */

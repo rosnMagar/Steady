@@ -61,7 +61,7 @@ export function Cohort() {
             {Array.from({ length: 4 }).map((_, i) => <Col key={i} xs={12} md={6}><Skeleton height="5rem" /></Col>)}
           </Row>
         ) : summary.data ? (
-          <Row gutter={[12, 12]}>
+          <Row gutter={[12, 12]} align="stretch">
             <Col xs={12} md={6}><StatTile label="Enrolled" value={summary.data.enrolled} /></Col>
             <Col xs={12} md={6}><StatTile label="Heads-up" value={summary.data.heads_up} tone="heads_up" /></Col>
             <Col xs={12} md={6}><StatTile label="Building" value={summary.data.building} tone="building" /></Col>
