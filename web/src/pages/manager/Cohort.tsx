@@ -95,7 +95,21 @@ export function Cohort() {
               rowKey="person_id"
               pagination={false}
               size="small"
-              onRow={(record) => ({ onClick: () => setSelected(record.person_id) })}
+              // Rows open the detail drawer, so they must behave like buttons for keyboard and
+              // screen-reader users too — not just for the mouse.
+              onRow={(record) => ({
+                onClick: () => setSelected(record.person_id),
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(record.person_id);
+                  }
+                },
+                tabIndex: 0,
+                role: "button",
+                "aria-label": `Open ${record.name}, status ${record.status}`,
+                style: { cursor: "pointer" },
+              })}
             />
           </Card>
         )}

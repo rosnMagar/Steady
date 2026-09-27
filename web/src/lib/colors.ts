@@ -17,6 +17,25 @@ export function useColors() {
   return c;
 }
 
+/** Shared Recharts tooltip styling.
+ *
+ * Recharts renders each tooltip ITEM in that series' own color, and our series colors are
+ * fill-tuned tokens (e.g. --building #faad14) that sit at ~1.9:1 on the tooltip surface —
+ * unreadable. `contentStyle` only styles the wrapper, so the item color has to be overridden
+ * explicitly via `itemStyle`; spreading it last is what makes it win over Recharts' default. */
+export const tooltipTheme = {
+  contentStyle: {
+    background: "rgb(var(--elevated))",
+    border: "1px solid rgb(var(--border))",
+    borderRadius: 12,
+    fontSize: 13,
+    boxShadow: "0 6px 20px rgb(0 0 0 / 0.18)",
+    padding: "8px 12px",
+  },
+  itemStyle: { color: "rgb(var(--text))", padding: "2px 0" },
+  labelStyle: { color: "rgb(var(--muted))", fontWeight: 600, marginBottom: 2 },
+} as const;
+
 function build() {
   return {
     accent: read("accent"),

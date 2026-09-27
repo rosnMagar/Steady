@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Phone, ExternalLink, Bookmark, ThumbsDown, LifeBuoy, Share2, Heart, Search, Info,
 } from "lucide-react";
-import { Flex, Input, Segmented } from "antd";
+import { Flex, Input, App } from "antd";
 import { api } from "../../api/client";
 import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, Skeleton, ErrorState, Button, Disclaimer } from "../../components/ui";
@@ -10,18 +10,36 @@ import type { Program, CatalogProgram, SelfCareTip } from "../../api/types";
 
 const PERSON_ID = "p_demo";
 
-async function shareProgram(p: { name: string; org: string; url: string; phone?: string }) {
+type ShareResult = "shared" | "copied" | "cancelled" | "failed";
+
+/** Share sheet where supported, clipboard everywhere else. Returns what actually happened so the
+ *  caller can confirm it — a tap that silently does nothing is the worst outcome here. */
+async function shareProgram(p: { name: string; org: string; url: string; phone?: string }): Promise<ShareResult> {
   const text = `${p.name} — ${p.org}${p.phone ? ` · ${p.phone}` : ""}`;
-  try {
-    if (navigator.share) {
+  if (navigator.share) {
+    try {
       await navigator.share({ title: p.name, text, url: p.url });
-      return;
+      return "shared";
+    } catch (e) {
+      // The user dismissing the share sheet is not an error — don't nag them about it.
+      if (e instanceof Error && e.name === "AbortError") return "cancelled";
     }
+  }
+  try {
     await navigator.clipboard.writeText(`${text}\n${p.url}`);
-  } catch { /* user cancelled or blocked — no-op */ }
+    return "copied";
+  } catch {
+    return "failed";
+  }
 }
 
-function ProgramActions({ p, share }: { p: { phone?: string; url: string }; share: () => void }) {
+function ProgramActions({ p }: { p: { name: string; org: string; phone?: string; url: string } }) {
+  const { message } = App.useApp();
+  const onShare = async () => {
+    const r = await shareProgram(p);
+    if (r === "copied") message.success("Copied — paste it wherever you like.");
+    else if (r === "failed") message.error("Couldn't share that. You can still tap Visit.");
+  };
   return (
     <>
       {p.phone && (
@@ -32,7 +50,7 @@ function ProgramActions({ p, share }: { p: { phone?: string; url: string }; shar
       <a href={p.url} target="_blank" rel="noreferrer" className="no-underline">
         <Button variant="outline" className="text-sm"><ExternalLink size={16} /> Visit</Button>
       </a>
-      <Button variant="ghost" className="text-sm" onClick={share}>
+      <Button variant="ghost" className="text-sm" onClick={onShare}>
         <Share2 size={16} /> Share
       </Button>
     </>
@@ -42,8 +60,10 @@ function ProgramActions({ p, share }: { p: { phone?: string; url: string }; shar
 /** Rich card for a program recommended to this caregiver — with feedback wired to the API. */
 function RecommendedCard({ p }: { p: Program }) {
   const [feedback, setFeedback] = useState<"saved" | "not_helpful" | null>(null);
+  const { message } = App.useApp();
   const send = (next: "saved" | "not_helpful") => {
     setFeedback(next);
+    message.success(next === "saved" ? "Saved to your list." : "Thanks — noted.");
     void api.feedback(PERSON_ID, p.program_id, next === "saved").catch(() => {});
   };
   return (
@@ -59,7 +79,7 @@ function RecommendedCard({ p }: { p: Program }) {
       )}
       {p.eligibility && <div className="text-xs t-muted" style={{ marginTop: "0.5rem" }}><b>Who it's for:</b> {p.eligibility}</div>}
       <Flex wrap gap={8} style={{ marginTop: "0.75rem" }}>
-        <ProgramActions p={p} share={() => shareProgram(p)} />
+        <ProgramActions p={p} />
         <Button variant="ghost" className="text-sm" onClick={() => send("saved")}>
           <Bookmark size={16} /> {feedback === "saved" ? "Saved" : "Save"}
         </Button>
@@ -100,7 +120,7 @@ function CatalogCard({ p }: { p: CatalogProgram }) {
       {p.description && <p className="text-sm t-text" style={{ marginTop: "0.5rem" }}>{p.description}</p>}
       {p.eligibility && <div className="text-xs t-muted" style={{ marginTop: "0.5rem" }}><b>Who it's for:</b> {p.eligibility}</div>}
       <Flex wrap gap={8} style={{ marginTop: "0.75rem" }}>
-        <ProgramActions p={p} share={() => shareProgram(p)} />
+        <ProgramActions p={p} />
       </Flex>
     </Card>
   );
@@ -111,6 +131,9 @@ function ResourceLibrary() {
   const { data, loading, error, refetch } = useAsync(() => api.programs());
   const [cat, setCat] = useState<string>("All");
   const [q, setQ] = useState("");
+  // Keep the page scannable: show a handful, let people opt into the full list.
+  const [showAll, setShowAll] = useState(false);
+  const PREVIEW = 4;
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -126,11 +149,16 @@ function ResourceLibrary() {
       .filter((p) => !ql || p.name.toLowerCase().includes(ql) || p.org.toLowerCase().includes(ql) || p.description.toLowerCase().includes(ql));
   }, [data, cat, q]);
 
+  const visible = showAll ? filtered : filtered.slice(0, PREVIEW);
+
   return (
     <Flex vertical gap={12}>
       <div>
         <h2 className="text-lg font-semibold t-text" style={{ margin: 0 }}>Explore all support</h2>
-        <p className="text-sm t-muted" style={{ margin: 0 }}>Verified programs you can reach any time — not just when things are heavy.</p>
+        <p className="text-sm t-muted" style={{ margin: 0 }}>
+          Verified programs you can reach any time — not just when things are heavy.
+          {data ? ` ${filtered.length} available.` : ""}
+        </p>
       </div>
       {loading ? (
         <Skeleton height="12rem" />
@@ -138,22 +166,51 @@ function ResourceLibrary() {
         <ErrorState message={error ?? "Couldn't load resources"} onRetry={refetch} />
       ) : (
         <>
-          <Flex vertical gap={8}>
-            <div style={{ overflowX: "auto" }}>
-              <Segmented value={cat} onChange={(v) => setCat(String(v))} options={categories} />
+          <Flex vertical gap={10}>
+            {/* Horizontally scrollable so a long category list never wraps into a tall block
+                or clips on a narrow phone. */}
+            <div className="chip-scroller" role="group" aria-label="Filter by category">
+              {categories.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={cat === k}
+                  onClick={() => { setCat(k); setShowAll(false); }}
+                  className="chip"
+                  style={{
+                    background: cat === k ? "rgb(var(--accent) / 0.14)" : "transparent",
+                    borderColor: cat === k ? "rgb(var(--accent-ink))" : "rgb(var(--border))",
+                    color: cat === k ? "rgb(var(--accent-ink))" : "rgb(var(--muted))",
+                    fontWeight: cat === k ? 600 : 400,
+                  }}
+                >
+                  {k}
+                </button>
+              ))}
             </div>
             <Input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => { setQ(e.target.value); setShowAll(false); }}
               placeholder="Search resources…"
               prefix={<Search size={15} className="t-muted" />}
               allowClear
             />
           </Flex>
           <Flex vertical gap={12}>
-            {filtered.length === 0
-              ? <Card className="p-6 text-center t-muted">No resources match.</Card>
-              : filtered.map((p) => <CatalogCard key={p.program_id} p={p} />)}
+            {filtered.length === 0 ? (
+              <Card className="p-6 text-center t-muted">
+                No resources match. Try another category or clear the search.
+              </Card>
+            ) : (
+              <>
+                {visible.map((p) => <CatalogCard key={p.program_id} p={p} />)}
+                {filtered.length > visible.length && (
+                  <Button variant="outline" onClick={() => setShowAll(true)}>
+                    Show all {filtered.length} resources
+                  </Button>
+                )}
+              </>
+            )}
           </Flex>
         </>
       )}

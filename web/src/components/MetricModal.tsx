@@ -4,7 +4,7 @@ import {
   ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import type { Metric } from "../api/types";
-import { useColors } from "../lib/colors";
+import { useColors, tooltipTheme } from "../lib/colors";
 import { fmtDate } from "../lib/status";
 import { fmtValue, UNIT_IN_VALUE } from "../lib/metricFormat";
 
@@ -54,10 +54,7 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
             )}
             <Tooltip
               cursor={{ stroke: c.muted, strokeDasharray: "3 3" }}
-              contentStyle={{
-                background: "rgb(var(--elevated))", border: "1px solid rgb(var(--border))",
-                borderRadius: 12, color: "rgb(var(--text))", fontSize: 13,
-              }}
+              {...tooltipTheme}
               labelFormatter={(l) => fmtDate(String(l))}
               formatter={(val: unknown) => [fmtValue(metric.key, Number(val)) + unitSuffix, metric.label]}
             />

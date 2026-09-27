@@ -70,6 +70,14 @@ export const api = {
           { draft: "Hi, this is your care team checking in. This past week may have been a heavier stretch than usual — would a short call about support options help? No pressure, we're just here for you." },
           700,
         ),
+  exportData: (id: string) =>
+    USE_API
+      ? real<Record<string, unknown>>(`/api/caregivers/${id}/export`)
+      : mock<Record<string, unknown>>({ person_id: id, note: "Mock export — run with VITE_USE_API=1 for real data." }),
+  deleteData: (id: string) =>
+    USE_API
+      ? real<{ ok: boolean; deleted: number }>(`/api/caregivers/${id}/data`, { method: "DELETE" })
+      : mock<{ ok: boolean; deleted: number }>({ ok: true, deleted: 0 }),
   feedback: (id: string, programId: string, helpful: boolean) =>
     USE_API
       ? real<{ ok: boolean }>(`/api/caregivers/${id}/feedback`, {

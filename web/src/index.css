@@ -118,8 +118,49 @@ body {
 
 .min-tap { min-height: 44px; }
 
-.load-contrib { transition: background 0.15s ease; }
+/* Interactive row in the weekly-load drill-down. A real <button> so it's keyboard reachable;
+   min-height keeps it a comfortable touch target on a phone. */
+.load-contrib {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s ease;
+}
 .load-contrib:hover { background: rgb(var(--accent) / 0.08); }
+
+/* Pill toggle used for the load-chart day picker and the resource-library category filter.
+   A real <button> with aria-pressed, so it's reachable and announced correctly. */
+.chip {
+  min-height: 36px;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid;
+  border-radius: 9999px;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.chip:hover { background: rgb(var(--accent) / 0.08); }
+
+/* Single-row, swipeable filter strip. Scrollbar hidden but scrolling still works. */
+.chip-scroller {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.chip-scroller::-webkit-scrollbar { display: none; }
 
 .status-chip {
   display: inline-flex;

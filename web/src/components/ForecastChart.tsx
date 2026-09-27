@@ -2,7 +2,7 @@ import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import type { SeriesPoint } from "../api/types";
-import { useColors } from "../lib/colors";
+import { useColors, tooltipTheme } from "../lib/colors";
 import { fmtDate } from "../lib/status";
 
 /**
@@ -40,10 +40,7 @@ export function ForecastChart({ series, baseline, height = 220 }: {
         />
         <Tooltip
           cursor={{ stroke: c.muted, strokeDasharray: "3 3" }}
-          contentStyle={{
-            background: "rgb(var(--elevated))", border: "1px solid rgb(var(--border))",
-            borderRadius: 12, color: "rgb(var(--text))", fontSize: 13,
-          }}
+          {...tooltipTheme}
           labelFormatter={(l) => fmtDate(String(l))}
           formatter={(val: unknown, name: string) => {
             if (name === "band" && Array.isArray(val)) return [`${val[0]}–${val[1]}`, "likely range"];

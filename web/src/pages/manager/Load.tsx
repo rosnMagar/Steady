@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   ComposedChart, Bar, Area, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
-  ResponsiveContainer, Legend,
+  ResponsiveContainer,
 } from "recharts";
 import { Flex, Segmented, InputNumber, Row, Col } from "antd";
 import { ArrowUp, ArrowDown, Minus, ChevronRight, TriangleAlert, Sparkles } from "lucide-react";
@@ -9,7 +9,7 @@ import { api } from "../../api/client";
 import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState, Disclaimer } from "../../components/ui";
 import { CaregiverDrawer } from "./CaregiverDrawer";
-import { useColors } from "../../lib/colors";
+import { useColors, tooltipTheme } from "../../lib/colors";
 import { fmtDate } from "../../lib/status";
 import type { LoadDay } from "../../api/types";
 
@@ -85,6 +85,8 @@ export function Load() {
     return [...past, ...future];
   }, [data]);
 
+  const firstForecastDate = data?.days[0]?.date ?? null;
+
   const peakDay = useMemo<LoadDay | null>(() => {
     if (!data || data.days.length === 0) return null;
     return data.days.reduce((a, b) => (b.projected > a.projected ? b : a));
@@ -111,11 +113,6 @@ export function Load() {
   }, [activeDay]);
 
   const delta = data ? data.projected_total - data.actual_last_week : 0;
-
-  const tooltipStyle = {
-    background: "rgb(var(--elevated))", border: "1px solid rgb(var(--border))",
-    borderRadius: 12, color: "rgb(var(--text))", fontSize: 13,
-  };
 
   return (
     <Section>
@@ -185,12 +182,12 @@ export function Load() {
                     if (e?.activeLabel && data.days.some((d) => d.date === e.activeLabel)) setSelected(e.activeLabel);
                   }}>
                   <CartesianGrid vertical={false} stroke={c.grid} />
-                  <XAxis dataKey="date" tickFormatter={fmtDate} tickLine={false} axisLine={false}
+                  <XAxis dataKey="date" tickFormatter={fmtDate} tickLine={false} axisLine={false} minTickGap={14}
                     tick={{ fill: c.muted, fontSize: 12 }} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fill: c.muted, fontSize: 12 }} width={40} allowDecimals={false} />
                   <Tooltip
                     cursor={{ fill: "rgb(var(--accent) / 0.06)" }}
-                    contentStyle={tooltipStyle}
+                    {...tooltipTheme}
                     labelFormatter={(l) => fmtDate(String(l))}
                     formatter={(v: unknown, name: string) => {
                       if (name === "band" && Array.isArray(v)) return [`${v[0]}–${v[1]}`, "likely range"];
@@ -201,26 +198,38 @@ export function Load() {
                       return [v as number, labels[name] ?? name];
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {/* Past: actual outreach */}
-                  <Bar dataKey="actual" name="actual outreach" fill={c.muted} radius={[4, 4, 0, 0]} barSize={22} isAnimationActive={false} />
+                  {/* Past: actual outreach logged */}
+                  <Bar dataKey="actual" name="actual" fill={c.muted} radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
                   {mode === "total" ? (
                     <>
                       <Area dataKey="band" name="band" stroke="none" fill={c.band} isAnimationActive />
-                      <Bar dataKey="projected" name="projected" radius={[4, 4, 0, 0]} barSize={22}>
+                      <Bar dataKey="projected" name="projected" radius={[4, 4, 0, 0]} maxBarSize={26}>
                         {chart.map((d, i) => {
-                          const over = capacity != null && (d as { projected?: number }).projected != null && (d as { projected: number }).projected > capacity;
+                          const row = d as { projected?: number };
+                          const over = capacity != null && row.projected != null && row.projected > capacity;
                           const isSel = activeDay?.date === d.date;
-                          return <Cell key={i} fill={over ? c.headsup : c.accent} opacity={isSel ? 1 : 0.82} cursor="pointer" />;
+                          // Selection has to read at a glance: the chosen bar keeps full colour and
+                          // gains an outline, everything else drops back.
+                          return (
+                            <Cell key={i} fill={over ? c.headsup : c.accent}
+                              opacity={isSel ? 1 : 0.45}
+                              stroke={isSel ? c.text : undefined} strokeWidth={isSel ? 2 : 0}
+                              cursor="pointer" />
+                          );
                         })}
                       </Bar>
                     </>
                   ) : (
                     <>
-                      <Bar dataKey="heads_up" name="heads_up" stackId="s" fill={c.headsup} barSize={22} />
-                      <Bar dataKey="building" name="building" stackId="s" fill={c.building} barSize={22} />
-                      <Bar dataKey="steady" name="steady" stackId="s" fill={c.steady} barSize={22} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="heads_up" name="heads_up" stackId="s" fill={c.headsup} maxBarSize={26} />
+                      <Bar dataKey="building" name="building" stackId="s" fill={c.building} maxBarSize={26} />
+                      <Bar dataKey="steady" name="steady" stackId="s" fill={c.steady} maxBarSize={26} radius={[4, 4, 0, 0]} />
                     </>
+                  )}
+                  {/* Where logged history stops and the forecast begins. */}
+                  {firstForecastDate && (
+                    <ReferenceLine x={firstForecastDate} stroke={c.muted} strokeDasharray="3 3"
+                      label={{ value: "forecast →", position: "insideTopLeft", fill: c.muted, fontSize: 11 }} />
                   )}
                   {capacity != null && (
                     <ReferenceLine y={capacity} stroke={c.headsup} strokeDasharray="4 4"
@@ -228,9 +237,47 @@ export function Load() {
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
-              <div className="text-xs t-muted" style={{ marginTop: 8 }}>
-                Left of the gap is actual outreach logged; right is the 7-day projection. Tap a projected bar to see who's driving it.
-              </div>
+              {/* Custom legend: Recharts' own colours each label with its series colour, which fails
+                  contrast, and it leaks internal keys like "band". */}
+              <Flex wrap gap={14} style={{ marginTop: 10 }}>
+                {(mode === "total"
+                  ? [{ k: "a", color: c.muted, label: "Logged outreach" },
+                     { k: "p", color: c.accent, label: "Projected" },
+                     { k: "b", color: c.band, label: "Likely range" }]
+                  : [{ k: "h", color: c.headsup, label: "Heads-up" },
+                     { k: "bu", color: c.building, label: "Building" },
+                     { k: "s", color: c.steady, label: "May cross" }]
+                ).map((it) => (
+                  <Flex key={it.k} align="center" gap={6}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: it.color, flexShrink: 0 }} />
+                    <span className="text-xs t-muted">{it.label}</span>
+                  </Flex>
+                ))}
+              </Flex>
+              {/* Keyboard-reachable day picker — clicking a bar is a nice shortcut, but it must not
+                  be the ONLY way to drill into a day. */}
+              <Flex wrap gap={6} style={{ marginTop: 12 }} role="group" aria-label="Select a projected day">
+                {data.days.map((d) => {
+                  const on = activeDay?.date === d.date;
+                  return (
+                    <button
+                      key={d.date}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setSelected(d.date)}
+                      className="chip"
+                      style={{
+                        background: on ? "rgb(var(--accent) / 0.14)" : "transparent",
+                        borderColor: on ? "rgb(var(--accent-ink))" : "rgb(var(--border))",
+                        color: on ? "rgb(var(--accent-ink))" : "rgb(var(--muted))",
+                        fontWeight: on ? 600 : 400,
+                      }}
+                    >
+                      {fmtDate(d.date)} · {d.projected}
+                    </button>
+                  );
+                })}
+              </Flex>
             </Card>
 
             {capacity != null && overCapacityDays > 0 && (
@@ -247,29 +294,30 @@ export function Load() {
               <Row gutter={[12, 12]}>
                 <Col xs={24} md={14}>
                   <Card className="p-4">
-                    <Flex align="center" justify="space-between" style={{ marginBottom: 8 }}>
-                      <div className="font-semibold t-text">Driving {fmtDate(activeDay.date)}</div>
-                      <div className="text-xs t-muted">{activeDay.contributors.length} likely · tap to open</div>
+                    <Flex align="center" justify="space-between" wrap gap={8} style={{ marginBottom: 8 }}>
+                      <div className="font-semibold t-text">
+                        Driving {fmtDate(activeDay.date)}
+                        {selected == null && <span className="text-xs t-muted" style={{ fontWeight: 400 }}> · busiest day</span>}
+                      </div>
+                      <div className="text-xs t-muted">{activeDay.contributors.length} likely</div>
                     </Flex>
-                    <Flex vertical gap={6}>
+                    <Flex vertical gap={4}>
                       {activeDay.contributors.map((ctr) => (
-                        <div
+                        <button
                           key={ctr.person_id}
+                          type="button"
                           onClick={() => setDrawer(ctr.person_id)}
                           className="load-contrib"
-                          style={{
-                            display: "flex", alignItems: "center", gap: 10, padding: "0.5rem 0.5rem",
-                            borderRadius: 10, cursor: "pointer",
-                          }}
+                          aria-label={`Open ${ctr.name}, ${Math.round(ctr.prob * 100)} percent likely`}
                         >
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                             <div className="text-sm font-medium t-text" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ctr.name}</div>
                             <div className="text-xs t-muted">{ctr.region}</div>
                           </div>
                           <StatusChip status={ctr.status} size="sm" />
                           <div className="text-xs t-muted" style={{ width: 44, textAlign: "right" }}>{Math.round(ctr.prob * 100)}%</div>
-                          <ChevronRight size={16} className="t-muted" />
-                        </div>
+                          <ChevronRight size={16} className="t-muted" aria-hidden />
+                        </button>
                       ))}
                     </Flex>
                   </Card>
