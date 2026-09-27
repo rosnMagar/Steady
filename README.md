@@ -4,6 +4,11 @@ Forecasts family-caregiver strain from wearable signals days before a crisis, ma
 real support programs with Snowflake Cortex, and rolls forecasts up into a weekly caseload view for
 care managers. Built for TigerHacks 2026 (Snowflake and Reply tracks).
 
+**Why "Steady":** it's named after the steady state — the baseline in the app's own status scale
+(`steady` → `building` → `heads_up`). "Steady" is what a caregiver sees when their signals are
+tracking close to their own normal, and keeping them there is the point of the product: surface a
+heavier stretch early enough to do something about it, rather than after a crisis.
+
 **Limits, stated up front:** training data (LifeSnaps) is general Fitbit wearers, not caregivers;
 "strain" is proxied by validated stress/mood self-reports; n=71. This is a support tool, not a
 diagnostic device.
