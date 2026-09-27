@@ -1,11 +1,18 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
+import { Button as AntButton, Tag, Statistic } from "antd";
 import type { Status } from "../api/types";
 import { STATUS } from "../lib/status";
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Card({ children, className = "", interactive = false, onClick, style }: {
+  children: ReactNode;
+  className?: string;
+  interactive?: boolean;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+}) {
   return (
-    <div className={`rounded-2xl bg-surface border border-border shadow-card ${className}`}>
+    <div className={`app-card ${interactive ? "interactive" : ""} ${className}`} onClick={onClick} style={style}>
       {children}
     </div>
   );
@@ -25,60 +32,71 @@ export function Section({ children, className = "" }: { children: ReactNode; cla
 }
 
 export function Button({
-  children, onClick, variant = "primary", className = "", ...rest
+  children, onClick, variant = "primary", className = "", disabled,
 }: {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "ghost" | "outline";
   className?: string;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const styles = {
-    primary: "bg-accent text-white hover:opacity-90",
-    ghost: "text-accent hover:bg-accent-soft",
-    outline: "border border-border text-text hover:bg-bg",
-  }[variant];
+  disabled?: boolean;
+}) {
+  const type = variant === "primary" ? "primary" : variant === "ghost" ? "text" : "default";
   return (
-    <button
+    <AntButton
+      type={type}
+      size="large"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl font-medium transition ${styles} ${className}`}
-      {...rest}
+      disabled={disabled}
+      block={className.includes("w-full")}
+      className={`min-tap ${className}`}
     >
-      {children}
-    </button>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>{children}</span>
+    </AntButton>
   );
 }
 
 export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm" | "md" }) {
   const m = STATUS[status];
-  const pad = size === "sm" ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm";
+  const fontSize = size === "sm" ? "0.75rem" : "0.875rem";
+  const pad = size === "sm" ? "0.125rem 0.5rem" : "0.25rem 0.75rem";
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full font-medium ${pad} text-${m.colorVar}`}
-      style={{ backgroundColor: `rgb(var(--${m.colorVar}) / 0.12)` }}>
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: `rgb(var(--${m.colorVar}))` }} />
+    <Tag
+      bordered={false}
+      className="status-chip"
+      style={{ fontSize, padding: pad, margin: 0, color: `rgb(var(--${m.colorVar}))`, backgroundColor: `rgb(var(--${m.colorVar}) / 0.12)` }}
+    >
+      <span style={{ height: 6, width: 6, borderRadius: 9999, backgroundColor: `rgb(var(--${m.colorVar}))` }} />
       {m.label}
-    </span>
+    </Tag>
   );
 }
 
 export function StatTile({ label, value, tone }: { label: string; value: ReactNode; tone?: Status }) {
-  const color = tone ? `text-${STATUS[tone].colorVar}` : "text-text";
+  const color = tone ? `rgb(var(--${STATUS[tone].colorVar}))` : "rgb(var(--text))";
   return (
     <Card className="p-4">
-      <div className="text-sm text-muted">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold ${color}`}>{value}</div>
+      <Statistic
+        title={<span className="t-muted text-sm">{label}</span>}
+        value={value as string | number}
+        valueStyle={{ color, fontSize: "1.5rem", fontWeight: 600 }}
+      />
     </Card>
   );
 }
 
-export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse-soft rounded-xl bg-border/60 ${className}`} />;
+export function Skeleton({ height = "6rem", width = "100%", className = "" }: {
+  height?: string;
+  width?: string;
+  className?: string;
+}) {
+  return <div className={`skeleton ${className}`} style={{ height, width }} />;
 }
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <Card className="p-8 text-center">
-      <div className="font-medium text-text">{title}</div>
-      {hint && <div className="mt-1 text-sm text-muted">{hint}</div>}
+    <Card className="p-6 text-center">
+      <div className="font-medium t-text">{title}</div>
+      {hint && <div className="mt-1 text-sm t-muted">{hint}</div>}
     </Card>
   );
 }
@@ -86,10 +104,10 @@ export function EmptyState({ title, hint }: { title: string; hint?: string }) {
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <Card className="p-6 text-center">
-      <div className="font-medium text-headsup">Something went wrong</div>
-      <div className="mt-1 text-sm text-muted">{message}</div>
+      <div className="font-medium t-headsup">Something went wrong</div>
+      <div className="mt-1 text-sm t-muted">{message}</div>
       {onRetry && (
-        <Button variant="outline" className="mt-4" onClick={onRetry}>Try again</Button>
+        <div style={{ marginTop: "1rem" }}><Button variant="outline" onClick={onRetry}>Try again</Button></div>
       )}
     </Card>
   );
@@ -97,7 +115,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function Disclaimer({ children }: { children: ReactNode }) {
   return (
-    <p className="text-xs text-muted flex items-center gap-1.5">
+    <p className="text-xs t-muted" style={{ display: "inline-flex", alignItems: "center", gap: 6, margin: 0 }}>
       <span aria-hidden>✎</span> {children}
     </p>
   );

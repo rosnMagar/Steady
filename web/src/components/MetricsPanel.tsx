@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Minus, Maximize2 } from "lucide-react";
+import { Row, Col } from "antd";
 import type { Metric } from "../api/types";
 import { useColors } from "../lib/colors";
 import { Card } from "./ui";
@@ -37,18 +38,18 @@ function MetricTile({ m, onOpen }: { m: Metric; onOpen: () => void }) {
 
   return (
     <button type="button" onClick={onOpen} aria-label={`Enlarge ${m.label} chart`}
-      className="text-left w-full rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-    <Card className="p-3 h-full cursor-pointer transition hover:shadow-lg hover:border-accent/40">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs text-muted">{m.label}</span>
+      style={{ textAlign: "left", width: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: "1.25rem" }}>
+    <Card interactive className="p-3" style={{ height: "100%" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+        <span className="text-xs t-muted">{m.label}</span>
         {m.low_data
-          ? <span className="text-[10px] text-muted">limited data</span>
-          : <Maximize2 size={12} className="text-muted shrink-0" aria-hidden />}
+          ? <span className="t-muted" style={{ fontSize: "10px" }}>limited data</span>
+          : <Maximize2 size={12} className="t-muted" aria-hidden style={{ flexShrink: 0 }} />}
       </div>
-      <div className="mt-1 flex items-end justify-between gap-2">
+      <div style={{ marginTop: 4, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
         <div>
-          <span className="text-xl font-semibold text-text">{fmtValue(m.key, m.latest)}</span>
-          {m.unit && <span className="ml-1 text-xs text-muted">{m.unit}</span>}
+          <span className="text-xl font-semibold t-text">{fmtValue(m.key, m.latest)}</span>
+          {m.unit && <span className="text-xs t-muted" style={{ marginLeft: 4 }}>{m.unit}</span>}
         </div>
         {!m.low_data && (
           <svg width={w} height={h} role="img"
@@ -62,11 +63,10 @@ function MetricTile({ m, onOpen }: { m: Metric; onOpen: () => void }) {
           </svg>
         )}
       </div>
-      <div className="mt-1.5 flex items-center gap-1 text-xs"
-        style={{ color: `rgb(var(--${dirColorToken[tone]}))` }}>
+      <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: `rgb(var(--${dirColorToken[tone]}))` }}>
         <Arrow size={13} />
         <span>{dirText}</span>
-        <span className="text-muted">· usual {fmtValue(m.key, m.baseline)}{m.unit && ` ${m.unit}`}</span>
+        <span className="t-muted">· usual {fmtValue(m.key, m.baseline)}{m.unit && ` ${m.unit}`}</span>
       </div>
     </Card>
     </button>
@@ -84,14 +84,18 @@ export function MetricsPanel({ metrics, asOf, dense = false, possessive = "your"
   if (!metrics.length) return null;
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-2">
-        <span className="text-sm font-medium text-text">The signals behind this</span>
-        {asOf && <span className="text-xs text-muted">as of {fmtDate(asOf)}</span>}
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+        <span className="text-sm font-medium t-text">The signals behind this</span>
+        {asOf && <span className="text-xs t-muted">as of {fmtDate(asOf)}</span>}
       </div>
-      <div className={`grid gap-2 ${dense ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
-        {metrics.map((m) => <MetricTile key={m.key} m={m} onOpen={() => setOpen(m)} />)}
-      </div>
-      <p className="mt-2 text-[11px] text-muted">
+      <Row gutter={[8, 8]}>
+        {metrics.map((m) => (
+          <Col key={m.key} xs={12} sm={dense ? 12 : 8}>
+            <MetricTile m={m} onOpen={() => setOpen(m)} />
+          </Col>
+        ))}
+      </Row>
+      <p className="t-muted" style={{ marginTop: 8, fontSize: "11px" }}>
         Tap any signal to enlarge. Daily aggregates from {possessive} wearable, compared with {possessive} own recent baseline. Not a clinical measurement.
       </p>
       {open && <MetricModal metric={open} onClose={() => setOpen(null)} />}

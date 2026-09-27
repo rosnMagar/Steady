@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Segmented, Tag, Flex } from "antd";
 import { Section, Card, Button } from "../../components/ui";
+
+const { CheckableTag } = Tag;
 
 const FACES = [
   { v: 1, emoji: "😌", label: "Light" },
@@ -22,53 +25,57 @@ export function CheckIn() {
   if (done)
     return (
       <Section>
-        <Card className="p-8 text-center">
+        <Card className="p-6 text-center">
           <div className="text-4xl">💚</div>
-          <div className="mt-3 text-lg font-semibold text-text">Thanks for checking in</div>
-          <p className="mt-1 text-sm text-muted">That helps Steady learn what a heavy day looks like for you.</p>
-          <Button className="mt-5" onClick={() => nav("/app")}>Back to Today</Button>
+          <div className="text-lg font-semibold t-text" style={{ marginTop: "0.75rem" }}>Thanks for checking in</div>
+          <p className="text-sm t-muted" style={{ marginTop: "0.25rem" }}>That helps Steady learn what a heavy day looks like for you.</p>
+          <div style={{ marginTop: "1.25rem" }}><Button onClick={() => nav("/app")}>Back to Today</Button></div>
         </Card>
       </Section>
     );
 
   return (
-    <Section className="space-y-5">
-      <h1 className="text-2xl font-bold tracking-tight text-text">How heavy did today feel?</h1>
+    <Section>
+      <Flex vertical gap={20}>
+        <h1 className="text-2xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>How heavy did today feel?</h1>
 
-      <div className="grid grid-cols-5 gap-2">
-        {FACES.map((f) => (
-          <button
-            key={f.v} onClick={() => setStress(f.v)}
-            className={`flex flex-col items-center gap-1 py-3 rounded-xl border min-h-[44px] transition ${
-              stress === f.v ? "border-accent bg-accent-soft" : "border-border bg-surface"
-            }`}
-          >
-            <span className="text-2xl">{f.emoji}</span>
-            <span className="text-[11px] text-muted">{f.label}</span>
-          </button>
-        ))}
-      </div>
+        <Segmented
+          block
+          size="large"
+          value={stress ?? 0}
+          onChange={(v) => setStress(Number(v))}
+          options={FACES.map((f) => ({
+            value: f.v,
+            label: (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "0.35rem 0" }}>
+                <span style={{ fontSize: "1.5rem" }}>{f.emoji}</span>
+                <span className="text-xs t-muted">{f.label}</span>
+              </div>
+            ),
+          }))}
+        />
 
-      <div>
-        <div className="text-sm font-medium text-text mb-2">Anything behind it? (optional)</div>
-        <div className="flex flex-wrap gap-2">
-          {TAGS.map((t) => (
-            <button
-              key={t} onClick={() => toggle(t)}
-              className={`px-3 py-2 rounded-full text-sm border min-h-[44px] transition ${
-                tags.includes(t) ? "border-accent bg-accent-soft text-accent" : "border-border text-muted"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+        <div>
+          <div className="text-sm font-medium t-text" style={{ marginBottom: "0.5rem" }}>Anything behind it? (optional)</div>
+          <Flex wrap gap={8}>
+            {TAGS.map((t) => (
+              <CheckableTag
+                key={t}
+                checked={tags.includes(t)}
+                onChange={() => toggle(t)}
+                style={{ padding: "0.4rem 0.75rem", borderRadius: 9999, border: "1px solid rgb(var(--border))", fontSize: "0.875rem" }}
+              >
+                {t}
+              </CheckableTag>
+            ))}
+          </Flex>
         </div>
-      </div>
 
-      <Button className="w-full" disabled={stress === null} onClick={() => setDone(true)}>
-        Done
-      </Button>
-      <p className="text-center text-xs text-muted">Takes about 10 seconds. You can skip any day.</p>
+        <Button className="w-full" disabled={stress === null} onClick={() => setDone(true)}>
+          Done
+        </Button>
+        <p className="text-center text-xs t-muted" style={{ margin: 0 }}>Takes about 10 seconds. You can skip any day.</p>
+      </Flex>
     </Section>
   );
 }

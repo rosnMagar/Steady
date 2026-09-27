@@ -1,76 +1,83 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { Table, Flex, type TableColumnsType } from "antd";
 import { api } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { Card, Skeleton, ErrorState, Section } from "../components/ui";
+import type { Methods as MethodsData } from "../api/types";
+
+type BacktestRow = MethodsData["backtest"][number];
 
 export function Methods() {
   const { data, loading, error, refetch } = useAsync(() => api.methods());
 
+  const columns: TableColumnsType<BacktestRow> = [
+    { title: "Metric", render: (_, b) => <span className="t-text">{b.metric} <span className="text-xs t-muted">({b.unit})</span></span> },
+    { title: "Model", render: (_, b) => (b.model ?? <span className="t-muted" style={{ fontStyle: "italic" }}>pending</span>) },
+    { title: "Naive baseline", render: (_, b) => <span className="t-muted">{b.naive_baseline ?? "—"}</span> },
+  ];
+
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
+    <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
+      <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "2rem 1.5rem" }}>
+        <Link to="/" className="text-sm t-accent no-underline" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <ArrowLeft size={16} /> Back
         </Link>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-text">How Steady works & its limits</h1>
+        <h1 className="text-3xl font-bold t-text" style={{ letterSpacing: "-0.01em", marginTop: "1rem" }}>How Steady works &amp; its limits</h1>
 
         {loading ? (
-          <div className="mt-6 space-y-4"><Skeleton className="h-24" /><Skeleton className="h-40" /><Skeleton className="h-40" /></div>
+          <Flex vertical gap={16} style={{ marginTop: "1.5rem" }}><Skeleton height="6rem" /><Skeleton height="10rem" /><Skeleton height="10rem" /></Flex>
         ) : error || !data ? (
-          <div className="mt-6"><ErrorState message={error ?? "No data"} onRetry={refetch} /></div>
+          <div style={{ marginTop: "1.5rem" }}><ErrorState message={error ?? "No data"} onRetry={refetch} /></div>
         ) : (
-          <Section className="mt-6 space-y-6">
-            <Card className="p-5 border-l-4 border-l-building">
-              <div className="flex items-center gap-2 text-building font-medium"><AlertTriangle size={18} /> Read this first</div>
-              <p className="mt-2 text-sm text-text leading-relaxed">{data.disclosure}</p>
-            </Card>
-
-            <div>
-              <h2 className="text-lg font-semibold text-text mb-2">Data sources</h2>
-              <div className="space-y-2">
-                {data.data_sources.map((s) => (
-                  <Card key={s.name} className="p-4">
-                    <div className="font-medium text-text">{s.name} <span className="text-xs text-muted font-normal">· {s.license}</span></div>
-                    <div className="text-sm text-muted mt-0.5">{s.use}</div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-semibold text-text mb-2">Backtest</h2>
-              <Card className="overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="text-muted text-left border-b border-border">
-                    <tr><th className="font-medium px-4 py-3">Metric</th><th className="font-medium px-4 py-3">Model</th><th className="font-medium px-4 py-3">Naive baseline</th></tr>
-                  </thead>
-                  <tbody>
-                    {data.backtest.map((b) => (
-                      <tr key={b.metric} className="border-b border-border last:border-0">
-                        <td className="px-4 py-3 text-text">{b.metric} <span className="text-xs text-muted">({b.unit})</span></td>
-                        <td className="px-4 py-3 text-text">{b.model ?? <span className="text-muted italic">pending</span>}</td>
-                        <td className="px-4 py-3 text-muted">{b.naive_baseline ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="px-4 py-2 text-xs text-muted border-t border-border">
-                  {data.n_participants_used} of {data.n_participants} participants used · {data.date_range}
-                </div>
+          <Section>
+            <Flex vertical gap={24} style={{ marginTop: "1.5rem" }}>
+              <Card className="p-5" style={{ borderLeft: "4px solid rgb(var(--building))" }}>
+                <div className="t-building font-medium" style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={18} /> Read this first</div>
+                <p className="text-sm t-text" style={{ marginTop: "0.5rem", lineHeight: 1.6, marginBottom: 0 }}>{data.disclosure}</p>
               </Card>
-            </div>
 
-            <div>
-              <h2 className="text-lg font-semibold text-text mb-2">Known limitations</h2>
-              <ul className="space-y-1.5">
-                {data.known_limitations.map((l) => (
-                  <li key={l} className="flex items-start gap-2 text-sm text-text">
-                    <span className="text-building mt-0.5">•</span> {l}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <div>
+                <h2 className="text-lg font-semibold t-text" style={{ marginBottom: "0.5rem" }}>Data sources</h2>
+                <Flex vertical gap={8}>
+                  {data.data_sources.map((s) => (
+                    <Card key={s.name} className="p-4">
+                      <div className="font-medium t-text">{s.name} <span className="text-xs t-muted">· {s.license}</span></div>
+                      <div className="text-sm t-muted" style={{ marginTop: 2 }}>{s.use}</div>
+                    </Card>
+                  ))}
+                </Flex>
+              </div>
+
+              <div>
+                <h2 className="text-lg font-semibold t-text" style={{ marginBottom: "0.5rem" }}>Backtest</h2>
+                <Card className="p-0" style={{ overflow: "hidden" }}>
+                  <Table<BacktestRow>
+                    columns={columns}
+                    dataSource={data.backtest}
+                    rowKey="metric"
+                    pagination={false}
+                    size="small"
+                    footer={() => (
+                      <span className="text-xs t-muted">
+                        {data.n_participants_used} of {data.n_participants} participants used · {data.date_range}
+                      </span>
+                    )}
+                  />
+                </Card>
+              </div>
+
+              <div>
+                <h2 className="text-lg font-semibold t-text" style={{ marginBottom: "0.5rem" }}>Known limitations</h2>
+                <Flex vertical gap={6}>
+                  {data.known_limitations.map((l) => (
+                    <div key={l} className="text-sm t-text" style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <span className="t-building" style={{ marginTop: 2 }}>•</span> {l}
+                    </div>
+                  ))}
+                </Flex>
+              </div>
+            </Flex>
           </Section>
         )}
       </div>

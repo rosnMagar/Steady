@@ -1,5 +1,6 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
+import { Button } from "antd";
 import { useTheme } from "../lib/theme";
 
 const nav = [
@@ -11,33 +12,37 @@ const nav = [
 export function ManagerLayout() {
   const { theme, toggle } = useTheme();
   return (
-    <div className="min-h-screen bg-bg">
-      <header className="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="font-semibold text-lg tracking-tight text-text">Steady</Link>
-            <span className="text-sm text-muted hidden sm:inline">Care manager</span>
-            <nav className="flex gap-1">
+    <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
+      <header
+        style={{
+          position: "sticky", top: 0, zIndex: 10,
+          background: "rgb(var(--bg) / 0.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgb(var(--border))",
+        }}
+      >
+        <div style={{ maxWidth: "72rem", margin: "0 auto", height: "4rem", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+            <Link to="/" className="text-lg font-semibold t-text no-underline" style={{ letterSpacing: "-0.01em" }}>Steady</Link>
+            <span className="text-sm t-muted" style={{ display: "none" }}>Care manager</span>
+            <nav style={{ display: "flex", gap: 4 }}>
               {nav.map(({ to, label, end }) => (
                 <NavLink
                   key={to} to={to} end={end}
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded-lg text-sm font-medium ${
-                      isActive ? "text-accent bg-accent-soft" : "text-muted hover:text-text"
-                    }`
-                  }
+                  className={({ isActive }) => `text-sm font-medium no-underline ${isActive ? "t-accent" : "t-muted"}`}
+                  style={({ isActive }) => ({
+                    padding: "0.5rem 0.75rem", borderRadius: 8,
+                    background: isActive ? "rgb(var(--accent-soft))" : undefined,
+                  })}
                 >
                   {label}
                 </NavLink>
               ))}
             </nav>
           </div>
-          <button onClick={toggle} aria-label="Toggle theme" className="p-2 rounded-lg text-muted hover:text-text">
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
+          <Button type="text" shape="circle" aria-label="Toggle theme" onClick={toggle}
+            icon={theme === "light" ? <Moon size={18} /> : <Sun size={18} />} />
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "1.5rem" }}>
         <Outlet />
       </main>
     </div>

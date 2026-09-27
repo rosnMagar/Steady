@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Flex } from "antd";
 import { api } from "../../api/client";
 import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, StatusChip, Skeleton, ErrorState } from "../../components/ui";
@@ -8,17 +9,17 @@ import { MetricsPanel } from "../../components/MetricsPanel";
 import { STATUS } from "../../lib/status";
 import type { Driver } from "../../api/types";
 
-function DriverRow({ d }: { d: Driver }) {
+function DriverRow({ d, first }: { d: Driver; first: boolean }) {
   const Icon = d.direction === "worse" ? TrendingUp : d.direction === "better" ? TrendingDown : Minus;
-  const color = d.direction === "worse" ? "text-headsup" : d.direction === "better" ? "text-steady" : "text-muted";
+  const color = d.direction === "worse" ? "t-headsup" : d.direction === "better" ? "t-steady" : "t-muted";
   return (
-    <li className="flex items-start gap-3 py-2.5">
-      <Icon size={18} className={`mt-0.5 ${color}`} />
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "0.625rem 0", borderTop: first ? "none" : "1px solid rgb(var(--border))" }}>
+      <Icon size={18} className={color} style={{ marginTop: 2 }} />
       <div>
-        <div className="text-sm font-medium text-text">{d.label}</div>
-        <div className="text-sm text-muted">{d.detail}</div>
+        <div className="text-sm font-medium t-text">{d.label}</div>
+        <div className="text-sm t-muted">{d.detail}</div>
       </div>
-    </li>
+    </div>
   );
 }
 
@@ -28,11 +29,11 @@ export function Today() {
 
   if (loading)
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-56" />
-        <Skeleton className="h-32" />
-      </div>
+      <Flex vertical gap={16}>
+        <Skeleton height="6rem" />
+        <Skeleton height="14rem" />
+        <Skeleton height="8rem" />
+      </Flex>
     );
   if (error || !data) return <ErrorState message={error ?? "No data"} onRetry={refetch} />;
 
@@ -40,8 +41,8 @@ export function Today() {
     return (
       <Section>
         <Card className="p-6 text-center">
-          <div className="text-lg font-semibold text-text">Learning your baseline</div>
-          <p className="mt-2 text-sm text-muted">
+          <div className="text-lg font-semibold t-text">Learning your baseline</div>
+          <p className="text-sm t-muted" style={{ marginTop: "0.5rem" }}>
             Steady needs about two weeks of your normal rhythm before it can spot changes.
             About {data.baseline_days_remaining} days to go.
           </p>
@@ -51,40 +52,42 @@ export function Today() {
 
   const meta = STATUS[data.status];
   return (
-    <Section className="space-y-5">
-      <div>
-        <div className="text-sm text-muted">Hi {data.name}, here's your week</div>
-        <div className="mt-2 flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight text-text">{meta.caregiverWord}</h1>
-          <StatusChip status={data.status} />
+    <Section>
+      <Flex vertical gap={20}>
+        <div>
+          <div className="text-sm t-muted">Hi {data.name}, here's your week</div>
+          <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 className="text-3xl font-bold t-text" style={{ letterSpacing: "-0.01em", margin: 0 }}>{meta.caregiverWord}</h1>
+            <StatusChip status={data.status} />
+          </div>
+          <p className="t-muted" style={{ marginTop: "0.25rem", marginBottom: 0 }}>{data.headline}</p>
         </div>
-        <p className="mt-1 text-muted">{data.headline}</p>
-      </div>
 
-      <Card className="p-4">
-        <div className="text-sm font-medium text-text mb-2">Next 7 days</div>
-        <ForecastChart series={data.series} baseline={data.baseline} />
-      </Card>
+        <Card className="p-4">
+          <div className="text-sm font-medium t-text" style={{ marginBottom: "0.5rem" }}>Next 7 days</div>
+          <ForecastChart series={data.series} baseline={data.baseline} />
+        </Card>
 
-      <Card className="p-4">
-        <div className="text-sm font-medium text-text">What's moving this</div>
-        <ul className="mt-1 divide-y divide-border">
-          {data.drivers.map((d) => <DriverRow key={d.label} d={d} />)}
-        </ul>
-      </Card>
+        <Card className="p-4">
+          <div className="text-sm font-medium t-text">What's moving this</div>
+          <div style={{ marginTop: "0.25rem" }}>
+            {data.drivers.map((d, i) => <DriverRow key={d.label} d={d} first={i === 0} />)}
+          </div>
+        </Card>
 
-      {metrics.data && metrics.data.metrics.length > 0 && (
-        <MetricsPanel metrics={metrics.data.metrics} asOf={metrics.data.as_of} />
-      )}
+        {metrics.data && metrics.data.metrics.length > 0 && (
+          <MetricsPanel metrics={metrics.data.metrics} asOf={metrics.data.as_of} />
+        )}
 
-      {data.status !== "steady" && (
-        <Link to="/app/headsup">
-          <Card className="p-4 flex items-center justify-between hover:shadow-lg transition">
-            <span className="font-medium text-text">See support that fits you</span>
-            <ArrowRight className="text-accent" size={20} />
-          </Card>
-        </Link>
-      )}
+        {data.status !== "steady" && (
+          <Link to="/app/headsup" className="no-underline">
+            <Card interactive className="p-4" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span className="font-medium t-text">See support that fits you</span>
+              <ArrowRight className="t-accent" size={20} />
+            </Card>
+          </Link>
+        )}
+      </Flex>
     </Section>
   );
 }
