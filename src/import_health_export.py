@@ -45,11 +45,14 @@ def _parse_dt(ts: str) -> datetime:
 
 
 class _DayAgg:
-    __slots__ = ("sums", "counts", "asleep_min", "inbed_min")
+    __slots__ = ("sums", "counts", "src_sums", "asleep_min", "inbed_min")
 
     def __init__(self):
-        self.sums: dict[str, float] = defaultdict(float)
-        self.counts: dict[str, int] = defaultdict(int)
+        self.sums: dict[str, float] = defaultdict(float)            # averaged types: running total
+        self.counts: dict[str, int] = defaultdict(int)             # averaged types: n
+        # summed types keep a per-SOURCE tally so we can de-dup the iPhone+Watch double-count:
+        # both devices log steps/energy for the same day, so we take the max single source, not the sum.
+        self.src_sums: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
         self.asleep_min = 0.0
         self.inbed_min = 0.0
 
@@ -82,8 +85,11 @@ def parse_export(stream) -> dict[str, _DayAgg]:
                 val = float(elem.get("value"))
                 if day:
                     key = QUANTITY_TYPES[rtype]
-                    days[day].sums[key] += val
-                    days[day].counts[key] += 1
+                    if key in SUMMED:  # per-source, so we can de-dup iPhone+Watch overlap later
+                        days[day].src_sums[key][elem.get("sourceName") or "?"] += val
+                    else:  # averaged (resting HR, HRV) — watch-only in practice
+                        days[day].sums[key] += val
+                        days[day].counts[key] += 1
             elif rtype == SLEEP_TYPE:
                 start, end = elem.get("startDate"), elem.get("endDate")
                 day = _local_day(start)
@@ -115,7 +121,9 @@ def to_rows(days: dict[str, _DayAgg], person_id: str, source: str,
             return round(a.sums[k] / a.counts[k], 1) if a.counts[k] else None
 
         def total(k):
-            return round(a.sums[k], 1) if a.counts[k] else None
+            # de-dup: whichever device counted the most that day, not the sum of both.
+            per = a.src_sums.get(k)
+            return round(max(per.values()), 1) if per else None
 
         active = total("active_energy_kcal")
         basal = total("basal_energy_kcal")

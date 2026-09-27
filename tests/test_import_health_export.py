@@ -50,6 +50,21 @@ def test_malformed_value_is_skipped_not_fatal():
     assert r["resting_hr"] is None            # no HR that day
 
 
+_XML_MULTISOURCE = b"""<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone"      startDate="2026-08-01 09:00:00 -0500" endDate="2026-08-01 09:10:00 -0500" value="7000"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" startDate="2026-08-01 09:00:00 -0500" endDate="2026-08-01 09:10:00 -0500" value="9000"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone"      startDate="2026-08-01 18:00:00 -0500" endDate="2026-08-01 18:10:00 -0500" value="1000"/>
+</HealthData>"""
+
+
+def test_steps_dedup_takes_max_source_not_sum():
+    days = ih.parse_export(io.BytesIO(_XML_MULTISOURCE))
+    r = {x["date"]: x for x in ih.to_rows(days, "p_test", "apple_watch")}["2026-08-01"]
+    # iPhone day-sum = 8000, Watch day-sum = 9000 -> take 9000 (the busier device), NOT 17000.
+    assert r["steps"] == 9000
+
+
 def test_days_filter_keeps_only_recent():
     days = ih.parse_export(io.BytesIO(_XML))
     rows = ih.to_rows(days, "p_test", "apple_watch", since=date(2026, 8, 2))
