@@ -13,7 +13,7 @@ import pandas as pd
 from src.snowflake_io import query as _sf_query, connect
 from server import demo, store
 from server.cache import cached
-from server.config import HEADS_UP_RISK
+from server.config import HEADS_UP_RISK, DEMO_CAREGIVER_ID
 
 NOTE_DISCLAIMER = "AI-written, not medical advice."
 CRISIS_NOTE = "If you are in crisis or thinking about harming yourself, call or text 988 anytime."
@@ -99,9 +99,15 @@ def _cohort_frame() -> pd.DataFrame:
 
 
 def resolve(person_id: str) -> str:
-    """Map the caregiver-app alias 'p_demo' to the highest-risk real person so every view aligns."""
+    """Map the caregiver-app alias 'p_demo' to a real person. Prefer the configured live participant
+    (DEMO_CAREGIVER_ID) so the caregiver app features real Apple Watch data; fall back to the
+    highest-risk person if that id hasn't been scored yet."""
     if person_id != demo.DEMO_ALIAS:
         return person_id
+    if DEMO_CAREGIVER_ID:
+        hit = _q(f"SELECT person_id FROM RISK WHERE person_id='{_esc(DEMO_CAREGIVER_ID)}'")
+        if not hit.empty:
+            return DEMO_CAREGIVER_ID
     top = _q("SELECT person_id FROM RISK ORDER BY risk DESC LIMIT 1")
     return top.iloc[0]["person_id"] if not top.empty else person_id
 

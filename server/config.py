@@ -24,3 +24,8 @@ DB_PATH = Path(__file__).resolve().parent.parent / "data" / "steady_app.db"
 # crosses the person's own top-quartile ("load building toward your heads-up level"). The raw
 # risk score is bimodal on this snapshot (no middle band), so the middle tier lives in the forecast.
 HEADS_UP_RISK = 0.5
+
+# The caregiver app is hard-wired to the "p_demo" alias. By default we resolve it to this live
+# participant (real Apple Watch data) so the caregiver view features them; if that id isn't scored
+# yet, resolve() falls back to the highest-risk person. Override in .env to feature someone else.
+DEMO_CAREGIVER_ID = get("DEMO_CAREGIVER_ID", "p_roshan")
