@@ -1,12 +1,716 @@
 {
-  "staffing_hint": "Expect 5-8 caregivers likely to need outreach this week, peaking mid-week.",
+  "staffing_hint": "Expect around 8\u201313 caregivers likely to need outreach this week, peaking mid-week.",
   "days": [
-    { "date": "2026-10-04", "projected": 5, "lower": 3, "upper": 7 },
-    { "date": "2026-10-05", "projected": 6, "lower": 4, "upper": 9 },
-    { "date": "2026-10-06", "projected": 8, "lower": 5, "upper": 11 },
-    { "date": "2026-10-07", "projected": 7, "lower": 4, "upper": 10 },
-    { "date": "2026-10-08", "projected": 6, "lower": 3, "upper": 9 },
-    { "date": "2026-10-09", "projected": 5, "lower": 3, "upper": 8 },
-    { "date": "2026-10-10", "projected": 4, "lower": 2, "upper": 7 }
-  ]
+    {
+      "date": "2026-09-28",
+      "projected": 11,
+      "lower": 8,
+      "upper": 14,
+      "by_status": {
+        "steady": 2.37,
+        "heads_up": 6.54,
+        "building": 2.02
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.991
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.839
+        },
+        {
+          "person_id": "621e34ca67b776a240be3b69",
+          "name": "Ingrid N.",
+          "region": "63110",
+          "status": "building",
+          "prob": 0.824
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.794
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.714
+        },
+        {
+          "person_id": "621e2f6167b776a240e082a9",
+          "name": "Ruth W.",
+          "region": "63110",
+          "status": "building",
+          "prob": 0.661
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.537
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.468
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.468
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.41
+        },
+        {
+          "person_id": "621e36f967b776a240e5e7c9",
+          "name": "Grace N.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.402
+        },
+        {
+          "person_id": "621e314867b776a24029ebf9",
+          "name": "Maria O.",
+          "region": "63116",
+          "status": "steady",
+          "prob": 0.383
+        }
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "projected": 12,
+      "lower": 9,
+      "upper": 15,
+      "by_status": {
+        "steady": 3.07,
+        "heads_up": 7.01,
+        "building": 1.56
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 1.0
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.758
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.727
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.706
+        },
+        {
+          "person_id": "621e36f967b776a240e5e7c9",
+          "name": "Grace N.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.665
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.63
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.595
+        },
+        {
+          "person_id": "621e2f6167b776a240e082a9",
+          "name": "Ruth W.",
+          "region": "63110",
+          "status": "building",
+          "prob": 0.504
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.482
+        },
+        {
+          "person_id": "621e34ca67b776a240be3b69",
+          "name": "Ingrid N.",
+          "region": "63110",
+          "status": "building",
+          "prob": 0.43
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.428
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.413
+        }
+      ]
+    },
+    {
+      "date": "2026-09-30",
+      "projected": 11,
+      "lower": 8,
+      "upper": 14,
+      "by_status": {
+        "steady": 3.93,
+        "heads_up": 6.79,
+        "building": 0.4
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.965
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.717
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.716
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.701
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.592
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.53
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.506
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.504
+        },
+        {
+          "person_id": "621e2efa67b776a2409dd1c3",
+          "name": "Samuel O.",
+          "region": "63139",
+          "status": "steady",
+          "prob": 0.421
+        },
+        {
+          "person_id": "p_roshan",
+          "name": "Roshan Magar",
+          "region": "63104",
+          "status": "steady",
+          "prob": 0.386
+        },
+        {
+          "person_id": "621e36f967b776a240e5e7c9",
+          "name": "Grace N.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.37
+        },
+        {
+          "person_id": "621e329067b776a2402ffad2",
+          "name": "Emma B.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.338
+        }
+      ]
+    },
+    {
+      "date": "2026-10-01",
+      "projected": 12,
+      "lower": 9,
+      "upper": 16,
+      "by_status": {
+        "steady": 4.0,
+        "heads_up": 7.65,
+        "building": 0.75
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.943
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.812
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.771
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.69
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.685
+        },
+        {
+          "person_id": "621e36f967b776a240e5e7c9",
+          "name": "Grace N.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.628
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.6
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.569
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.527
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.402
+        },
+        {
+          "person_id": "621e2ed667b776a24085d8d1",
+          "name": "Aisha L.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.391
+        },
+        {
+          "person_id": "621e360b67b776a24039709f",
+          "name": "Marcus G.",
+          "region": "63116",
+          "status": "heads_up",
+          "prob": 0.373
+        }
+      ]
+    },
+    {
+      "date": "2026-10-02",
+      "projected": 13,
+      "lower": 10,
+      "upper": 16,
+      "by_status": {
+        "steady": 4.63,
+        "heads_up": 7.47,
+        "building": 1.0
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.975
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.948
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.825
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.671
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.608
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.589
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.528
+        },
+        {
+          "person_id": "621e339967b776a240e502de",
+          "name": "Samuel T.",
+          "region": "63139",
+          "status": "building",
+          "prob": 0.491
+        },
+        {
+          "person_id": "621e2ed667b776a24085d8d1",
+          "name": "Aisha L.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.468
+        },
+        {
+          "person_id": "621e36f967b776a240e5e7c9",
+          "name": "Grace N.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.465
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.447
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.438
+        }
+      ]
+    },
+    {
+      "date": "2026-10-03",
+      "projected": 12,
+      "lower": 9,
+      "upper": 16,
+      "by_status": {
+        "steady": 4.88,
+        "heads_up": 6.31,
+        "building": 1.18
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.909
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.898
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.783
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.657
+        },
+        {
+          "person_id": "621e339967b776a240e502de",
+          "name": "Samuel T.",
+          "region": "63139",
+          "status": "building",
+          "prob": 0.632
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.617
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.513
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.479
+        },
+        {
+          "person_id": "621e32af67b776a24045b4cf",
+          "name": "Emma T.",
+          "region": "63104",
+          "status": "steady",
+          "prob": 0.423
+        },
+        {
+          "person_id": "621e30b267b776a240c5e13f",
+          "name": "Hassan H.",
+          "region": "63109",
+          "status": "steady",
+          "prob": 0.379
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.362
+        },
+        {
+          "person_id": "621e351a67b776a240f6204b",
+          "name": "Sofia N.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.341
+        }
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "projected": 12,
+      "lower": 9,
+      "upper": 15,
+      "by_status": {
+        "steady": 4.88,
+        "heads_up": 6.13,
+        "building": 1.08
+      },
+      "contributors": [
+        {
+          "person_id": "621e346f67b776a24081744f",
+          "name": "Diego W.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.956
+        },
+        {
+          "person_id": "621e2f1b67b776a240b3d87c",
+          "name": "James G.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.899
+        },
+        {
+          "person_id": "621e2e8e67b776a24055b564",
+          "name": "Yuki O.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.767
+        },
+        {
+          "person_id": "621e2eaf67b776a2406b14ac",
+          "name": "Priya F.",
+          "region": "63110",
+          "status": "heads_up",
+          "prob": 0.646
+        },
+        {
+          "person_id": "621e326767b776a24012e179",
+          "name": "Sofia M.",
+          "region": "63118",
+          "status": "heads_up",
+          "prob": 0.597
+        },
+        {
+          "person_id": "621e337667b776a240ce78ab",
+          "name": "Omar M.",
+          "region": "63109",
+          "status": "heads_up",
+          "prob": 0.552
+        },
+        {
+          "person_id": "621e33ed67b776a2401cf5f7",
+          "name": "Nora H.",
+          "region": "63147",
+          "status": "building",
+          "prob": 0.52
+        },
+        {
+          "person_id": "621e339967b776a240e502de",
+          "name": "Samuel T.",
+          "region": "63139",
+          "status": "building",
+          "prob": 0.438
+        },
+        {
+          "person_id": "621e30b267b776a240c5e13f",
+          "name": "Hassan H.",
+          "region": "63109",
+          "status": "steady",
+          "prob": 0.392
+        },
+        {
+          "person_id": "621e301e67b776a240608a72",
+          "name": "Hassan D.",
+          "region": "63109",
+          "status": "steady",
+          "prob": 0.362
+        },
+        {
+          "person_id": "621e360b67b776a24039709f",
+          "name": "Marcus G.",
+          "region": "63116",
+          "status": "heads_up",
+          "prob": 0.331
+        },
+        {
+          "person_id": "621e322367b776a240e44e9b",
+          "name": "Chen H.",
+          "region": "63147",
+          "status": "heads_up",
+          "prob": 0.331
+        }
+      ]
+    }
+  ],
+  "recent_actuals": [
+    {
+      "date": "2026-09-21",
+      "count": 1
+    },
+    {
+      "date": "2026-09-22",
+      "count": 1
+    },
+    {
+      "date": "2026-09-23",
+      "count": 1
+    },
+    {
+      "date": "2026-09-24",
+      "count": 1
+    },
+    {
+      "date": "2026-09-25",
+      "count": 0
+    },
+    {
+      "date": "2026-09-26",
+      "count": 1
+    },
+    {
+      "date": "2026-09-27",
+      "count": 0
+    }
+  ],
+  "projected_total": 83,
+  "actual_last_week": 5
 }

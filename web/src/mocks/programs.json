@@ -1,0 +1,197 @@
+{
+  "programs": [
+    {
+      "program_id": "arch_respite",
+      "name": "ARCH National Respite Locator",
+      "org": "ARCH National Respite Network",
+      "description": "Searchable database to find local respite care providers so caregivers can take a break.",
+      "eligibility": "Caregivers seeking respite",
+      "phone": "",
+      "url": "https://archrespite.org/caregiver-resources/respitelocator",
+      "tags": [
+        "respite",
+        "local_services"
+      ],
+      "category": "Respite & breaks",
+      "crisis": false
+    },
+    {
+      "program_id": "eldercare_locator",
+      "name": "Eldercare Locator",
+      "org": "ACL / USAging",
+      "description": "Free national service that connects older adults and caregivers to local services such as home care, meals, transportation, respite, and caregiver support.",
+      "eligibility": "Older adults 60+ and their family caregivers",
+      "phone": "1-800-677-1116",
+      "url": "https://eldercare.acl.gov",
+      "tags": [
+        "navigation",
+        "respite",
+        "local_services"
+      ],
+      "category": "Respite & breaks",
+      "crisis": false
+    },
+    {
+      "program_id": "nfcsp",
+      "name": "National Family Caregiver Support Program",
+      "org": "ACL / Administration on Aging",
+      "description": "Federally funded program delivered through Area Agencies on Aging providing information, respite, counseling, and training to family caregivers; access via your local agency or the Eldercare Locator.",
+      "eligibility": "Caregivers of adults 60+, caregivers of any-age individuals with dementia, or relatives 55+ raising children",
+      "phone": "",
+      "url": "https://acl.gov/programs/support-caregivers/national-family-caregiver-support-program",
+      "tags": [
+        "financial",
+        "respite",
+        "education",
+        "government"
+      ],
+      "category": "Respite & breaks",
+      "crisis": false
+    },
+    {
+      "program_id": "pace",
+      "name": "PACE (Program of All-Inclusive Care for the Elderly)",
+      "org": "Medicare / Medicaid",
+      "description": "Program that coordinates and pays for medical and social services so older adults needing nursing-home-level care can stay in the community, easing the caregiving load.",
+      "eligibility": "Adults 55+ with Medicare and/or Medicaid who need nursing-home-level care",
+      "phone": "",
+      "url": "https://www.medicare.gov/health-drug-plans/health-plans/your-coverage-options/other-medicare-health-plans/PACE",
+      "tags": [
+        "financial",
+        "medical",
+        "respite",
+        "government"
+      ],
+      "category": "Respite & breaks",
+      "crisis": false
+    },
+    {
+      "program_id": "aarp_caregiving",
+      "name": "AARP Family Caregiving Resource Line",
+      "org": "AARP",
+      "description": "Toll-free line offering information, guidance, and support for family caregivers, plus online tools and guides.",
+      "eligibility": "Family and informal caregivers (no membership required)",
+      "phone": "1-877-333-5885",
+      "url": "https://www.aarp.org/caregiving",
+      "tags": [
+        "navigation",
+        "education",
+        "emotional_support"
+      ],
+      "category": "Emotional support",
+      "crisis": false
+    },
+    {
+      "program_id": "fca",
+      "name": "Family Caregiver Alliance",
+      "org": "Family Caregiver Alliance / National Center on Caregiving",
+      "description": "Education, resources, and services for family caregivers, including fact sheets, care navigation, and state-by-state resource directories.",
+      "eligibility": "Family and informal caregivers",
+      "phone": "1-800-445-8106",
+      "url": "https://www.caregiver.org",
+      "tags": [
+        "education",
+        "navigation",
+        "emotional_support"
+      ],
+      "category": "Emotional support",
+      "crisis": false
+    },
+    {
+      "program_id": "well_spouse",
+      "name": "Well Spouse Association",
+      "org": "Well Spouse Association",
+      "description": "Peer support for spouses and partners caring for a chronically ill or disabled loved one, including support groups and a newsletter.",
+      "eligibility": "Spouses and partners who are caregivers",
+      "phone": "",
+      "url": "https://wellspouse.org",
+      "tags": [
+        "peer_support",
+        "spousal",
+        "emotional_support"
+      ],
+      "category": "Emotional support",
+      "crisis": false
+    },
+    {
+      "program_id": "can_helpdesk",
+      "name": "National Caregiver Help Desk",
+      "org": "Caregiver Action Network",
+      "description": "Free help desk giving family caregivers personalized guidance and connections to resources.",
+      "eligibility": "Any family caregiver",
+      "phone": "1-855-227-3640",
+      "url": "https://www.caregiveraction.org/helpdesk",
+      "tags": [
+        "navigation",
+        "peer_support",
+        "education"
+      ],
+      "category": "Peer support",
+      "crisis": false
+    },
+    {
+      "program_id": "va_caregiver_support",
+      "name": "VA Caregiver Support Line",
+      "org": "U.S. Department of Veterans Affairs",
+      "description": "Phone line staffed by licensed clinical social workers offering support, counseling, and referrals for caregivers of Veterans, and connections to local VA caregiver programs.",
+      "eligibility": "Family caregivers of Veterans",
+      "phone": "1-855-260-3274",
+      "url": "https://www.caregiver.va.gov",
+      "tags": [
+        "veterans",
+        "counseling",
+        "navigation"
+      ],
+      "category": "Counseling",
+      "crisis": false
+    },
+    {
+      "program_id": "united_way_211",
+      "name": "211 (United Way)",
+      "org": "United Way Worldwide",
+      "description": "Free 24/7 helpline connecting people to local help with bills, food, housing, and caregiving resources; call or text 211.",
+      "eligibility": "Anyone needing local resources",
+      "phone": "211",
+      "url": "https://www.211.org",
+      "tags": [
+        "navigation",
+        "financial",
+        "basic_needs"
+      ],
+      "category": "Finding services",
+      "crisis": false
+    },
+    {
+      "program_id": "lifeline_988",
+      "name": "988 Suicide & Crisis Lifeline",
+      "org": "SAMHSA",
+      "description": "Free, confidential 24/7 crisis support by call, text, or chat for anyone in emotional distress or crisis, including overwhelmed caregivers.",
+      "eligibility": "Anyone in emotional distress or crisis",
+      "phone": "988",
+      "url": "https://988lifeline.org",
+      "tags": [
+        "crisis",
+        "mental_health",
+        "emotional_support"
+      ],
+      "category": "Emotional support",
+      "crisis": true
+    },
+    {
+      "program_id": "alz_helpline",
+      "name": "Alzheimer's Association 24/7 Helpline",
+      "org": "Alzheimer's Association",
+      "description": "Around-the-clock helpline with master's-level clinicians for dementia caregivers: information, local resources, crisis and emotional support in more than 200 languages.",
+      "eligibility": "Anyone affected by Alzheimer's or dementia",
+      "phone": "1-800-272-3900",
+      "url": "https://www.alz.org/help-support/resources/helpline",
+      "tags": [
+        "dementia",
+        "crisis",
+        "emotional_support"
+      ],
+      "category": "Emotional support",
+      "crisis": true
+    }
+  ]
+}

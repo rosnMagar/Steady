@@ -44,6 +44,71 @@ _HEADLINE = {
     "heads_up": "This week could be a heavier stretch than usual.",
 }
 
+# Non-medical, general self-care nudges keyed by the driver label that's elevated. Deterministic (not
+# LLM) and framed as general wellbeing ideas — never advice, diagnosis, or a substitute for care.
+_SELF_CARE_BY_LABEL = {
+    "Sleep": ("Protect your sleep",
+              "Even 20 extra minutes helps. A consistent wind-down and keeping screens out of the last "
+              "half hour before bed can make it easier to fall asleep."),
+    "Sleep quality": ("Ease into rest",
+                      "A short, screen-free wind-down — dim lights and a few slow breaths — can help the "
+                      "sleep you do get feel more restorative."),
+    "Resting heart rate": ("Give your body a reset",
+                          "A few minutes of slow breathing (in for 4, out for 6), once or twice a day, "
+                          "can help your body settle when things feel busy."),
+    "Recovery (HRV)": ("Build in recovery",
+                      "Short breaks between tasks — a walk, a stretch, a quiet cup of tea — give your "
+                      "body room to recover during a heavier stretch."),
+    "Activity": ("Keep moving gently",
+                "A brief walk outside, even 10 minutes, is a reliable way to steady both mood and energy."),
+    "Overall load": ("Pace the week",
+                    "Pick one thing to hand off or postpone this week. Lightening the load a little is a "
+                    "form of caring for yourself too."),
+}
+_GENERAL_SELF_CARE = [
+    ("Small breaks count", "A few minutes to yourself between tasks adds up. You don't have to earn rest."),
+    ("Stay connected", "A quick message to a friend or family member can lighten a heavy day — you're not meant to do this alone."),
+]
+SELF_CARE_DISCLAIMER = "General wellbeing ideas, not medical advice."
+
+# Friendly category label per program, chosen by the first matching tag in priority order.
+_CATEGORY_ORDER = [
+    ("respite", "Respite & breaks"),
+    ("emotional_support", "Emotional support"),
+    ("peer_support", "Peer support"),
+    ("counseling", "Counseling"),
+    ("navigation", "Finding services"),
+    ("education", "Learning & guidance"),
+    ("financial", "Financial help"),
+    ("veterans", "Veterans"),
+    ("dementia", "Dementia care"),
+    ("crisis", "Crisis support"),
+]
+
+
+def _category_for(tags: list[str]) -> str:
+    for tag, label in _CATEGORY_ORDER:
+        if tag in tags:
+            return label
+    return "Other support"
+
+
+def _self_care_for(driver_labels: list[str]) -> list[dict]:
+    """Pick up to two self-care nudges matched to the elevated drivers; fall back to general ones."""
+    tips, seen = [], set()
+    for label in driver_labels:
+        hit = _SELF_CARE_BY_LABEL.get(label)
+        if hit and hit[0] not in seen:
+            tips.append({"title": hit[0], "body": hit[1]})
+            seen.add(hit[0])
+    for title, body in _GENERAL_SELF_CARE:
+        if len(tips) >= 2:
+            break
+        if title not in seen:
+            tips.append({"title": title, "body": body})
+            seen.add(title)
+    return tips[:2]
+
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 def _q(sql: str) -> pd.DataFrame:
@@ -212,8 +277,10 @@ def _program_cards(program_ids: list[str], driver_labels: list[str]) -> list[dic
     if not program_ids:
         return []
     ids = ",".join(f"'{_esc(p)}'" for p in program_ids)
-    progs = _q(f"""SELECT program_id, name, org, COALESCE(phone,'') phone, COALESCE(url,'') url,
-                          ARRAY_TO_STRING(tags,'|') tags FROM PROGRAMS WHERE program_id IN ({ids})""")
+    progs = _q(f"""SELECT program_id, name, org, COALESCE(description,'') description,
+                          COALESCE(eligibility,'') eligibility, COALESCE(phone,'') phone,
+                          COALESCE(url,'') url, ARRAY_TO_STRING(tags,'|') tags
+                   FROM PROGRAMS WHERE program_id IN ({ids})""")
     by_id = {r["program_id"]: r for _, r in progs.iterrows()}
     cards = []
     used_why: set[str] = set()
@@ -228,8 +295,29 @@ def _program_cards(program_ids: list[str], driver_labels: list[str]) -> list[dic
                         "A real support program matched to your situation."))
         used_why.add(why)
         cards.append({"program_id": r["program_id"], "name": r["name"], "org": r["org"],
-                      "why": why, "phone": r["phone"], "url": r["url"], "tags": tags})
+                      "why": why, "description": r["description"], "eligibility": r["eligibility"],
+                      "phone": r["phone"], "url": r["url"], "tags": tags})
     return cards
+
+
+@cached()
+def programs_catalog() -> dict:
+    """Every real support program, grouped by a friendly category — powers the caregiver app's
+    always-on resource library. Cortex never touches this; it's the verified PROGRAMS table verbatim."""
+    df = _q("""SELECT program_id, name, org, COALESCE(description,'') description,
+                      COALESCE(eligibility,'') eligibility, COALESCE(phone,'') phone,
+                      COALESCE(url,'') url, ARRAY_TO_STRING(tags,'|') tags FROM PROGRAMS""")
+    items = []
+    for _, r in df.iterrows():
+        tags = [t for t in str(r["tags"]).split("|") if t]
+        items.append({"program_id": r["program_id"], "name": r["name"], "org": r["org"],
+                      "description": r["description"], "eligibility": r["eligibility"],
+                      "phone": r["phone"], "url": r["url"], "tags": tags,
+                      "category": _category_for(tags), "crisis": "crisis" in tags})
+    # Crisis resources last (shown as their own always-visible block); otherwise by category order.
+    order = {label: i for i, (_, label) in enumerate(_CATEGORY_ORDER)}
+    items.sort(key=lambda x: (x["crisis"], order.get(x["category"], 99), x["name"]))
+    return {"programs": items}
 
 
 def _brief(person_id: str, audience: str) -> tuple[str | None, list[str]]:
@@ -255,19 +343,23 @@ def headsup(person_id: str) -> dict:
     pid = resolve(person_id)
     row = _person_row(pid)
     status = row["status"] if row is not None else "steady"
+    drivers = [d["label"] for d in _drivers(pid)]
+    self_care = _self_care_for(drivers)
     if status == "steady":
         return {"person_id": person_id, "status": status,
                 "note": "You're tracking close to your usual this week. Keep doing what works, and "
                         "check back in anytime.",
-                "note_disclaimer": NOTE_DISCLAIMER, "programs": [], "crisis_note": CRISIS_NOTE}
+                "note_disclaimer": NOTE_DISCLAIMER, "programs": [],
+                "self_care": self_care, "self_care_disclaimer": SELF_CARE_DISCLAIMER,
+                "crisis_note": CRISIS_NOTE}
     body, ids = _brief(pid, "caregiver")
-    drivers = [d["label"] for d in _drivers(pid)]
     if not ids:  # building person without a stored brief: pick programs deterministically
         ids = _pick_programs(drivers)
     note = body or ("The next few days look like they could weigh on you a bit more than usual. "
                     "It might be a good moment to line up a little support before things pile up.")
     return {"person_id": person_id, "status": status, "note": note,
             "note_disclaimer": NOTE_DISCLAIMER, "programs": _program_cards(ids, drivers),
+            "self_care": self_care, "self_care_disclaimer": SELF_CARE_DISCLAIMER,
             "crisis_note": CRISIS_NOTE}
 
 
@@ -419,6 +511,7 @@ def cohort_load() -> dict:
                 FROM STRAIN_SCORE GROUP BY person_id""")
     m = fc.merge(p75, on="person_id", how="left")
     n = m["person_id"].nunique()
+    status_by = dict(zip(_cohort_frame()["person_id"], _cohort_frame()["status"]))
     start = date.today()
     days = []
     for h in range(1, 8):
@@ -426,24 +519,38 @@ def cohort_load() -> dict:
         if step.empty:
             continue
         ps = []
+        contributors = []
+        by_status: dict[str, float] = {}
         for r in step.itertuples():
             if r.p75 is None or pd.isna(r.p75):
                 continue
             sd = max((float(r.upper_bound) - float(r.lower_bound)) / (2 * 1.96), 1e-6)
-            ps.append(1.0 - _phi((float(r.p75) - float(r.forecast)) / sd))
+            p = 1.0 - _phi((float(r.p75) - float(r.forecast)) / sd)
+            ps.append(p)
+            st = status_by.get(r.person_id, "steady")
+            by_status[st] = by_status.get(st, 0.0) + p
+            contributors.append({"person_id": r.person_id, "name": demo.display_name(r.person_id),
+                                 "region": demo.region(r.person_id), "status": st, "prob": round(p, 3)})
         mean = sum(ps)
         var = sum(p * (1 - p) for p in ps)
         half = 1.28 * math.sqrt(var)  # ~80% interval
         projected = int(round(mean))
         lower = max(0, int(round(mean - half)))
         upper = min(n, int(round(mean + half)))
+        contributors.sort(key=lambda c: -c["prob"])
         days.append({"date": (start + timedelta(days=h)).isoformat(),
-                     "projected": projected, "lower": lower, "upper": upper})
+                     "projected": projected, "lower": lower, "upper": upper,
+                     "by_status": {k: round(v, 2) for k, v in by_status.items()},
+                     # only people with a non-trivial chance of crossing their own threshold that day
+                     "contributors": [c for c in contributors if c["prob"] >= 0.05][:12]})
     peak = max((d["projected"] for d in days), default=0)
     lo = min((d["lower"] for d in days), default=0)
     hint = (f"Expect around {lo}–{peak} caregivers likely to need outreach this week, "
             f"peaking mid-week." if days else "No outreach load projected.")
-    return {"staffing_hint": hint, "days": days}
+    recent_actuals = store.contacts_by_day(7)
+    return {"staffing_hint": hint, "days": days, "recent_actuals": recent_actuals,
+            "projected_total": sum(d["projected"] for d in days),
+            "actual_last_week": sum(a["count"] for a in recent_actuals)}
 
 
 @cached()

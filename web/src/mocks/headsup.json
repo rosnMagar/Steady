@@ -1,27 +1,50 @@
 {
   "person_id": "p_demo",
   "status": "heads_up",
-  "note": "The next few days look like they could weigh on you more than usual — your sleep has dipped and your resting heart rate has crept up. That is a common pattern when caregiving gets heavier. It might be a good moment to line up a little support before things pile up.",
+  "note": "You're doing a great job taking care of your loved one, but don't forget to take care of yourself too. This week, you've been sleeping less than your normal amount, which can be a sign that you're carrying a heavy load. You might want to look into the Eldercare Locator and the AARP Family Caregiving Resource Line for some extra support and guidance. They can help you find local resources and connect with others who understand what you're going through.",
   "note_disclaimer": "AI-written, not medical advice.",
   "programs": [
     {
-      "program_id": "arch_respite",
-      "name": "ARCH National Respite Locator",
-      "org": "ARCH National Respite Network",
-      "why": "Your sleep is slipping — a few hours of respite care could give you a real break.",
-      "phone": "",
-      "url": "https://archrespite.org/caregiver-resources/respitelocator",
-      "tags": ["respite", "local_services"]
+      "program_id": "eldercare_locator",
+      "name": "Eldercare Locator",
+      "org": "ACL / USAging",
+      "why": "Help finding and coordinating the right services for your situation.",
+      "description": "Free national service that connects older adults and caregivers to local services such as home care, meals, transportation, respite, and caregiver support.",
+      "eligibility": "Older adults 60+ and their family caregivers",
+      "phone": "1-800-677-1116",
+      "url": "https://eldercare.acl.gov",
+      "tags": [
+        "navigation",
+        "respite",
+        "local_services"
+      ]
     },
     {
-      "program_id": "can_helpdesk",
-      "name": "National Caregiver Help Desk",
-      "org": "Caregiver Action Network",
-      "why": "A free, person-to-person help desk to talk through what you need right now.",
-      "phone": "1-855-227-3640",
-      "url": "https://www.caregiveraction.org/helpdesk",
-      "tags": ["navigation", "peer_support", "education"]
+      "program_id": "aarp_caregiving",
+      "name": "AARP Family Caregiving Resource Line",
+      "org": "AARP",
+      "why": "Practical, plain-language guidance for what you're facing.",
+      "description": "Toll-free line offering information, guidance, and support for family caregivers, plus online tools and guides.",
+      "eligibility": "Family and informal caregivers (no membership required)",
+      "phone": "1-877-333-5885",
+      "url": "https://www.aarp.org/caregiving",
+      "tags": [
+        "navigation",
+        "education",
+        "emotional_support"
+      ]
     }
   ],
+  "self_care": [
+    {
+      "title": "Protect your sleep",
+      "body": "Even 20 extra minutes helps. A consistent wind-down and keeping screens out of the last half hour before bed can make it easier to fall asleep."
+    },
+    {
+      "title": "Pace the week",
+      "body": "Pick one thing to hand off or postpone this week. Lightening the load a little is a form of caring for yourself too."
+    }
+  ],
+  "self_care_disclaimer": "General wellbeing ideas, not medical advice.",
   "crisis_note": "If you are in crisis or thinking about harming yourself, call or text 988 anytime."
 }

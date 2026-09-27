@@ -19,9 +19,33 @@ export interface Program {
   name: string;
   org: string;
   why: string;
+  description?: string;
+  eligibility?: string;
   phone: string;
   url: string;
   tags: string[];
+}
+
+export interface CatalogProgram {
+  program_id: string;
+  name: string;
+  org: string;
+  description: string;
+  eligibility: string;
+  phone: string;
+  url: string;
+  tags: string[];
+  category: string;
+  crisis: boolean;
+}
+
+export interface ProgramsCatalog {
+  programs: CatalogProgram[];
+}
+
+export interface SelfCareTip {
+  title: string;
+  body: string;
 }
 
 export interface Today {
@@ -43,6 +67,8 @@ export interface HeadsUp {
   note: string;
   note_disclaimer: string;
   programs: Program[];
+  self_care: SelfCareTip[];
+  self_care_disclaimer: string;
   crisis_note: string;
 }
 
@@ -66,16 +92,34 @@ export interface CohortRow {
   last_contacted: string | null;
 }
 
+export interface LoadContributor {
+  person_id: string;
+  name: string;
+  region: string;
+  status: Status;
+  prob: number;
+}
+
 export interface LoadDay {
   date: string;
   projected: number;
   lower: number;
   upper: number;
+  by_status: Partial<Record<Status, number>>;
+  contributors: LoadContributor[];
+}
+
+export interface ActualDay {
+  date: string;
+  count: number;
 }
 
 export interface CohortLoad {
   staffing_hint: string;
   days: LoadDay[];
+  recent_actuals: ActualDay[];
+  projected_total: number;
+  actual_last_week: number;
 }
 
 export interface CohortDetail {

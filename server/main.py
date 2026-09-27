@@ -51,6 +51,11 @@ def methods():
     return repo.methods()
 
 
+@app.get("/api/programs")
+def programs():
+    return repo.programs_catalog()
+
+
 # Serve the built PWA (web/dist) as a single hosted link, if it's been built. API routes above win.
 # Real asset files are served directly; every other path falls back to index.html so client-side
 # routes (/dashboard, /app/headsup, …) work on direct navigation and refresh (SPA history mode).

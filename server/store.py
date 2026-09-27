@@ -67,6 +67,20 @@ def contacted_since(days: int = 7) -> int:
     return row["n"] if row else 0
 
 
+def contacts_by_day(days: int = 7) -> list[dict]:
+    """Actual outreach volume per day for the last `days` days (distinct people contacted each day),
+    for the care-manager 'actuals vs projected' overlay. Zero-filled so every day appears."""
+    start = date.today() - timedelta(days=days - 1)
+    with _conn() as c:
+        rows = c.execute(
+            "SELECT at, COUNT(DISTINCT person_id) n FROM contacts WHERE at >= ? GROUP BY at",
+            (start.isoformat(),),
+        ).fetchall()
+    counts = {r["at"]: r["n"] for r in rows}
+    return [{"date": (start + timedelta(days=i)).isoformat(), "count": counts.get((start + timedelta(days=i)).isoformat(), 0)}
+            for i in range(days)]
+
+
 def seed_demo_contacts(person_ids: list[str]):
     """One-time: give the caseload a little contact history so the dashboard isn't blank in the demo.
     Clearly synthetic workflow state, not clinical data. No-op if any contacts already exist."""

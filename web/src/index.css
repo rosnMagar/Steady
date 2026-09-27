@@ -102,6 +102,9 @@ body {
 
 .min-tap { min-height: 44px; }
 
+.load-contrib { transition: background 0.15s ease; }
+.load-contrib:hover { background: rgb(var(--accent) / 0.08); }
+
 .status-chip {
   display: inline-flex;
   align-items: center;
