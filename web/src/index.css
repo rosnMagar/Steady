@@ -6,31 +6,31 @@
    ConfigProvider theme (see main.tsx) so components adopt the teal palette and
    flip with [data-theme="dark"]. */
 :root {
-  --bg: 249 250 249;        /* warm off-white */
-  --surface: 255 255 255;
+  --bg: 245 245 245;        /* AntD colorBgLayout #f5f5f5 */
+  --surface: 255 255 255;   /* colorBgContainer */
   --elevated: 255 255 255;
-  --border: 229 231 229;
-  --text: 24 33 33;
-  --muted: 100 116 116;
-  --accent: 13 148 136;     /* teal-600 */
-  --accent-soft: 204 240 235;
-  --steady: 13 148 136;     /* teal */
-  --building: 202 138 4;    /* amber-600 */
-  --headsup: 217 119 6;     /* warm amber-orange, not red */
+  --border: 217 217 217;    /* colorBorder #d9d9d9 */
+  --text: 31 31 31;         /* colorText */
+  --muted: 140 140 140;     /* colorTextSecondary #8c8c8c */
+  --accent: 22 119 255;     /* AntD primary #1677ff */
+  --accent-soft: 230 244 255; /* #e6f4ff */
+  --steady: 82 196 26;      /* success #52c41a */
+  --building: 250 173 20;   /* warning #faad14 */
+  --headsup: 250 140 22;    /* orange #fa8c16 */
 }
 
 :root[data-theme="dark"] {
-  --bg: 12 20 20;
-  --surface: 20 30 30;
-  --elevated: 26 38 38;
-  --border: 40 54 54;
-  --text: 233 240 238;
-  --muted: 148 168 165;
-  --accent: 45 212 191;     /* teal-400 */
-  --accent-soft: 19 60 56;
-  --steady: 45 212 191;
-  --building: 234 179 8;
-  --headsup: 251 146 60;
+  --bg: 0 0 0;              /* AntD dark layout #000 */
+  --surface: 20 20 20;      /* container #141414 */
+  --elevated: 31 31 31;     /* #1f1f1f */
+  --border: 66 66 66;       /* #424242 */
+  --text: 230 230 230;
+  --muted: 140 140 140;
+  --accent: 22 104 220;     /* dark primary #1668dc */
+  --accent-soft: 17 26 44;  /* #111a2c */
+  --steady: 73 170 25;
+  --building: 216 150 20;
+  --headsup: 216 122 22;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -78,17 +78,17 @@ body {
 .text-center   { text-align: center; }
 .no-underline  { text-decoration: none; }
 
-/* Generic surface card used as the app's base container. */
+/* Base container styled like an Ant Design Card: flat, thin border, 8px radius. */
 .app-card {
   background: rgb(var(--surface));
   border: 1px solid rgb(var(--border));
-  border-radius: 1.25rem;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px rgb(15 23 42 / 0.06);
+  border-radius: 8px;
+  box-shadow: none;
 }
 .app-card.interactive { transition: box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
 .app-card.interactive:hover {
-  box-shadow: 0 4px 12px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.10);
-  border-color: rgb(var(--accent) / 0.4);
+  box-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.16), 0 3px 6px 0 rgb(0 0 0 / 0.12);
+  border-color: transparent;
 }
 
 .min-tap { min-height: 44px; }

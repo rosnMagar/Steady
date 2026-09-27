@@ -7,39 +7,17 @@ import { App } from "./App";
 import "antd/dist/reset.css";
 import "./index.css";
 
-// Hex mirrors of the design tokens in index.css, per theme.
-const TOKENS = {
-  light: {
-    bg: "#f9faf9", surface: "#ffffff", elevated: "#ffffff", border: "#e5e7e5",
-    text: "#182121", muted: "#647474", accent: "#0d9488",
-  },
-  dark: {
-    bg: "#0c1414", surface: "#141e1e", elevated: "#1a2626", border: "#283636",
-    text: "#e9f0ee", muted: "#94a8a5", accent: "#2dd4bf",
-  },
-};
-
-/** Wires the app's light/dark theme + teal palette into Ant Design's ConfigProvider. */
+/** Wires the app's light/dark toggle into Ant Design's own theme.
+ * We let AntD's default palette (its signature blue + neutral grays) drive,
+ * so the look is unmistakably Ant Design rather than the old teal design. */
 function AntdRoot({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
-  const t = TOKENS[theme];
   return (
     <ConfigProvider
       theme={{
         algorithm: theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          colorPrimary: t.accent,
-          colorInfo: t.accent,
-          colorBgBase: t.bg,
-          colorTextBase: t.text,
-          colorBgContainer: t.surface,
-          colorBgElevated: t.elevated,
-          colorBgLayout: t.bg,
-          colorBorder: t.border,
-          colorBorderSecondary: t.border,
-          colorText: t.text,
-          colorTextSecondary: t.muted,
-          borderRadius: 8,
+          // Only nudge the font; colors/surfaces/radii come from AntD's defaults.
           fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
         },
       }}
