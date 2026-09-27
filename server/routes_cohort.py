@@ -21,6 +21,11 @@ def load_forecast():
     return repo.cohort_load()
 
 
+@router.get("/load-insight")
+def load_insight():
+    return repo.load_insight()
+
+
 @router.get("/caregivers/{person_id}")
 def detail(person_id: str):
     return repo.cohort_detail(person_id)

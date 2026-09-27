@@ -4,10 +4,10 @@ import {
   ResponsiveContainer, Legend,
 } from "recharts";
 import { Flex, Segmented, InputNumber, Row, Col } from "antd";
-import { ArrowUp, ArrowDown, Minus, ChevronRight, TriangleAlert } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, ChevronRight, TriangleAlert, Sparkles } from "lucide-react";
 import { api } from "../../api/client";
 import { useAsync } from "../../hooks/useAsync";
-import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState } from "../../components/ui";
+import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState, Disclaimer } from "../../components/ui";
 import { CaregiverDrawer } from "./CaregiverDrawer";
 import { useColors } from "../../lib/colors";
 import { fmtDate } from "../../lib/status";
@@ -25,6 +25,34 @@ function readCapacity(): number | null {
 }
 
 type Mode = "total" | "status";
+
+/** Cortex-written read on this week's projected load. Loads on its own so a warehouse
+ *  cold start never holds up the chart. */
+function InsightCard() {
+  const { data, loading, error } = useAsync(() => api.loadInsight());
+  return (
+    <Card className="p-4">
+      <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+        <Sparkles className="t-accent" size={18} />
+        <div className="font-semibold t-text">What this week looks like</div>
+      </Flex>
+      {loading ? (
+        <Flex vertical gap={8}>
+          <Skeleton height="0.9rem" /><Skeleton height="0.9rem" /><Skeleton height="0.9rem" width="70%" />
+        </Flex>
+      ) : error || !data ? (
+        <div className="text-sm t-muted">Insight unavailable right now.</div>
+      ) : (
+        <>
+          <p className="text-sm t-text" style={{ lineHeight: 1.6, margin: 0 }}>{data.insight}</p>
+          <div style={{ marginTop: 10 }}>
+            <Disclaimer>{data.disclaimer}{data.model ? ` · ${data.model}` : ""}</Disclaimer>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
 
 export function Load() {
   const { data, loading, error, refetch } = useAsync(() => api.cohortLoad());
@@ -247,6 +275,7 @@ export function Load() {
                   </Card>
                 </Col>
                 <Col xs={24} md={10}>
+                  <Flex vertical gap={12}>
                   <Card className="p-4">
                     <div className="font-semibold t-text" style={{ marginBottom: 8 }}>By region</div>
                     <Flex vertical gap={10}>
@@ -265,6 +294,8 @@ export function Load() {
                       })}
                     </Flex>
                   </Card>
+                  <InsightCard />
+                  </Flex>
                 </Col>
               </Row>
             )}

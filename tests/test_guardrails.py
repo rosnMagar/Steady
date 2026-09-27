@@ -44,3 +44,34 @@ def test_crisis_note_constant_present():
 def test_banned_regex_matches_diagnosis_words():
     assert BANNED.search("diagnosis")
     assert not BANNED.search("your sleep has been shorter than usual")
+
+
+# ── care-manager load insight (Cortex) ───────────────────────────────────────
+from server.repo import insight_is_safe
+
+
+def test_insight_rejects_empty_output():
+    assert not insight_is_safe("")
+    assert not insight_is_safe("   ")
+
+
+def test_insight_rejects_invented_phone_number():
+    assert not insight_is_safe("Call the caregiver support line at 555-0134 to coordinate.")
+    assert not insight_is_safe("Refer them to 1-800-555-1212 for help.")
+
+
+def test_insight_rejects_medical_phrasing():
+    assert not insight_is_safe("These caregivers have a stress disorder this week.")
+
+
+def test_real_staffing_insight_passes():
+    assert insight_is_safe(
+        "The week builds toward a mid-week peak of 13 caregivers on October 2nd. Front-load "
+        "check-ins earlier in the week and hold capacity for the busiest day."
+    )
+
+
+def test_insight_allows_zips_dates_and_ranges():
+    """ZIP codes, ISO dates and numeric ranges must not trip the phone-number guard."""
+    assert insight_is_safe("Load concentrates in 63109, 63118 and 63110 on 2026-10-02.")
+    assert insight_is_safe("Expect 11-12 contacts per day, peaking at 13.")

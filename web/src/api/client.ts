@@ -2,7 +2,7 @@
 // Set VITE_USE_API=1 (with the FastAPI server running) to hit real endpoints.
 import type {
   Today, HeadsUp, CohortSummary, CohortRow, CohortLoad, CohortDetail, Methods, Metrics,
-  ProgramsCatalog,
+  ProgramsCatalog, LoadInsight,
 } from "./types";
 
 import today from "../mocks/today.json";
@@ -14,6 +14,7 @@ import cohortLoad from "../mocks/cohort_load.json";
 import cohortDetail from "../mocks/cohort_detail.json";
 import methods from "../mocks/methods.json";
 import programsCatalog from "../mocks/programs.json";
+import loadInsight from "../mocks/load_insight.json";
 
 const USE_API = import.meta.env.VITE_USE_API === "1";
 
@@ -49,6 +50,8 @@ export const api = {
       : mock<CohortRow[]>((cohortCaregivers as { caregivers: CohortRow[] }).caregivers),
   cohortLoad: () =>
     USE_API ? real<CohortLoad>(`/api/cohort/load-forecast`) : mock<CohortLoad>(cohortLoad),
+  loadInsight: () =>
+    USE_API ? real<LoadInsight>(`/api/cohort/load-insight`) : mock<LoadInsight>(loadInsight, 800),
   cohortDetail: (id: string) =>
     USE_API ? real<CohortDetail>(`/api/cohort/caregivers/${id}`) : mock<CohortDetail>(cohortDetail),
   methods: () =>

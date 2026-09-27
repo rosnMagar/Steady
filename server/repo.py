@@ -6,10 +6,12 @@ BRIEFS, PROGRAMS, BACKTEST_METRICS). This module only shapes and serves it — n
 """
 from __future__ import annotations
 import math
+import re
 from datetime import date, timedelta
 
 import pandas as pd
 
+from src.briefs import BANNED, MODEL as CORTEX_MODEL
 from src.snowflake_io import query as _sf_query, connect
 from server import demo, store
 from server.cache import cached
@@ -551,6 +553,73 @@ def cohort_load() -> dict:
     return {"staffing_hint": hint, "days": days, "recent_actuals": recent_actuals,
             "projected_total": sum(d["projected"] for d in days),
             "actual_last_week": sum(a["count"] for a in recent_actuals)}
+
+
+_INSIGHT_FALLBACK = ("Outreach demand is projected to rise into a mid-week peak. Front-load check-ins "
+                     "for the caregivers already flagged heads-up, and keep some capacity in reserve "
+                     "for the busiest day.")
+# A phone number or hotline-shaped string is the tell that the model invented a resource, which the
+# prompt forbids. Kept separate from BANNED (medical phrasing) so each reason is testable on its own.
+_RESOURCE_SHAPED = re.compile(r"\b\d{3}[-.\s]\d{3,4}\b|1-8\d\d")
+
+
+def insight_is_safe(text: str) -> bool:
+    """Deterministic guard for the Cortex load insight — pure, so it's covered by offline tests.
+    Rejects empty output, medical phrasing, and any invented phone number / hotline."""
+    if not text or not text.strip():
+        return False
+    return not (BANNED.search(text) or _RESOURCE_SHAPED.search(text))
+
+
+@cached(300)
+def load_insight() -> dict:
+    """Cortex-written staffing read on THIS week's projected load. Grounded the same way the briefs
+    are: the model only ever sees numbers this function computed, is told not to name any program or
+    person, and anything that trips the medical-phrase guard is dropped for a deterministic line.
+    Cached longer than the read endpoints — the underlying forecast only changes nightly."""
+    cl = cohort_load()
+    days = cl["days"]
+    if not days:
+        return {"insight": "No outreach load is projected for the coming week.",
+                "disclaimer": NOTE_DISCLAIMER, "model": None}
+    peak = max(days, key=lambda d: d["projected"])
+    bs = peak["by_status"]
+    regions: dict[str, float] = {}
+    for ctr in peak["contributors"]:
+        regions[ctr["region"]] = regions.get(ctr["region"], 0.0) + ctr["prob"]
+    top_regions = sorted(regions.items(), key=lambda kv: -kv[1])[:3]
+    region_txt = ", ".join(f"{z} ({v:.1f})" for z, v in top_regions) or "n/a"
+    by_day_txt = ", ".join(f"{d['date']}={d['projected']}" for d in days)
+    facts = (
+        f"- Projected outreach contacts needed over the next 7 days: {cl['projected_total']}\n"
+        f"- Busiest day: {peak['date']} with {peak['projected']} caregivers "
+        f"(likely range {peak['lower']}-{peak['upper']})\n"
+        f"- On that day, expected contacts by current status: heads-up {bs.get('heads_up', 0)}, "
+        f"building {bs.get('building', 0)}, currently-steady {bs.get('steady', 0)}\n"
+        f"- Highest-load ZIP codes that day: {region_txt}\n"
+        f"- Outreach actually logged in the last 7 days: {cl['actual_last_week']}\n"
+        f"- Projection by day: {by_day_txt}"
+    )
+    prompt = (
+        "You are briefing a care manager who schedules outreach calls to family caregivers.\n"
+        "Using ONLY the facts below, write 2-3 short sentences of practical staffing insight: the shape "
+        "of the week and how to sequence outreach.\n"
+        "Rules: plain language, no bullet points. Refer to caregivers as a group, never by name. Do NOT "
+        "diagnose, give medical advice, or name any program, organization, hotline, or phone number. "
+        "Do not invent numbers that are not listed below. Return only the text.\n\n"
+        f"FACTS:\n{facts}\n"
+    )
+    text = ""
+    try:
+        with connect() as c:
+            cur = c.cursor()
+            cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, %s)", (CORTEX_MODEL, prompt))
+            text = (cur.fetchone()[0] or "").strip()
+    except Exception:
+        text = ""
+    if not insight_is_safe(text):
+        return {"insight": _INSIGHT_FALLBACK, "disclaimer": NOTE_DISCLAIMER, "model": None}
+    return {"insight": text, "disclaimer": NOTE_DISCLAIMER, "model": CORTEX_MODEL}
 
 
 @cached()

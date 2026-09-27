@@ -122,6 +122,12 @@ export interface CohortLoad {
   actual_last_week: number;
 }
 
+export interface LoadInsight {
+  insight: string;
+  disclaimer: string;
+  model: string | null;
+}
+
 export interface CohortDetail {
   person_id: string;
   name: string;
