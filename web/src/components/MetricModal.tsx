@@ -6,7 +6,7 @@ import {
 import type { Metric } from "../api/types";
 import { useColors } from "../lib/colors";
 import { fmtDate } from "../lib/status";
-import { fmtValue } from "../lib/metricFormat";
+import { fmtValue, UNIT_IN_VALUE } from "../lib/metricFormat";
 
 /** Enlarged, interactive view of one metric's daily history with the personal baseline. */
 export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () => void }) {
@@ -15,8 +15,11 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
   const tone = metric.neutral ? "steady" : metric.direction;
   const stroke = tone === "worse" ? c.headsup : tone === "better" ? c.steady : c.accent;
 
-  const delta = metric.latest - metric.baseline;
-  const position = metric.neutral || metric.direction === "steady"
+  const hasBaseline = metric.baseline != null;
+  const delta = hasBaseline ? metric.latest - (metric.baseline as number) : 0;
+  const unitSuffix = metric.unit && !UNIT_IN_VALUE.has(metric.key) ? ` ${metric.unit}` : "";
+  const position = !hasBaseline ? "building your baseline"
+    : metric.neutral || metric.direction === "steady"
     ? (metric.neutral && Math.abs(delta) >= 0.5 ? (delta > 0 ? "above your usual" : "below your usual") : "in your usual range")
     : delta > 0 ? "above your usual" : "below your usual";
 
@@ -31,8 +34,8 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
       styles={{ content: { background: "rgb(var(--surface))" }, header: { background: "rgb(var(--surface))" } }}
     >
       <div className="text-sm t-muted">
-        Now <span className="font-medium t-text">{fmtValue(metric.key, metric.latest)}{metric.unit && ` ${metric.unit}`}</span>
-        {" · "}usual {fmtValue(metric.key, metric.baseline)}{metric.unit && ` ${metric.unit}`}
+        Now <span className="font-medium t-text">{fmtValue(metric.key, metric.latest)}{unitSuffix}</span>
+        {hasBaseline && <>{" · "}usual {fmtValue(metric.key, metric.baseline as number)}{unitSuffix}</>}
         {" · "}<span style={{ color: `rgb(var(--${tone === "worse" ? "headsup" : tone === "better" ? "steady" : "muted"}))` }}>{position}</span>
       </div>
 
@@ -45,8 +48,10 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
             <YAxis domain={["auto", "auto"]} tickLine={false} axisLine={false}
               tick={{ fill: c.muted, fontSize: 12 }} width={44}
               tickFormatter={(v: number) => fmtValue(metric.key, v)} />
-            <ReferenceLine y={metric.baseline} stroke={c.baseline} strokeDasharray="4 4"
-              label={{ value: "usual", position: "insideTopRight", fill: c.muted, fontSize: 11 }} />
+            {hasBaseline && (
+              <ReferenceLine y={metric.baseline as number} stroke={c.baseline} strokeDasharray="4 4"
+                label={{ value: "usual", position: "insideTopRight", fill: c.muted, fontSize: 11 }} />
+            )}
             <Tooltip
               cursor={{ stroke: c.muted, strokeDasharray: "3 3" }}
               contentStyle={{
@@ -54,7 +59,7 @@ export function MetricModal({ metric, onClose }: { metric: Metric; onClose: () =
                 borderRadius: 12, color: "rgb(var(--text))", fontSize: 13,
               }}
               labelFormatter={(l) => fmtDate(String(l))}
-              formatter={(val: unknown) => [fmtValue(metric.key, Number(val)) + (metric.unit ? ` ${metric.unit}` : ""), metric.label]}
+              formatter={(val: unknown) => [fmtValue(metric.key, Number(val)) + unitSuffix, metric.label]}
             />
             <Line dataKey="value" stroke={stroke} strokeWidth={2} dot={false}
               isAnimationActive animationDuration={450} />

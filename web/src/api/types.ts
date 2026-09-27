@@ -103,7 +103,7 @@ export interface Metric {
   label: string;
   unit: string;
   latest: number;
-  baseline: number;
+  baseline: number | null;
   direction: "worse" | "better" | "steady";
   neutral: boolean;
   low_data: boolean;

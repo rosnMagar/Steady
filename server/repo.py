@@ -120,7 +120,8 @@ def _person_row(person_id: str):
 
 # ── drivers ──────────────────────────────────────────────────────────────────
 def _drivers(person_id: str) -> list[dict]:
-    df = _q(f"""SELECT * FROM FEATURES WHERE person_id='{_esc(person_id)}'
+    df = _q(f"""SELECT * FROM FEATURES
+                WHERE person_id='{_esc(person_id)}' AND resting_hr IS NOT NULL
                 QUALIFY ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY date DESC) = 1""")
     if df.empty:
         return [{"label": "Overall load", "detail": "a bit above your usual", "direction": "worse"}]
@@ -309,14 +310,18 @@ def metrics(person_id: str) -> dict:
     if df.empty:
         return {"person_id": person_id, "as_of": None, "metrics": []}
     df = df.sort_values("date")
-    as_of = str(df.iloc[-1]["date"])
     out = []
+    latest_dates: list[str] = []
     for key, label, unit, higher_worse in _METRICS:
         series = [{"date": str(r.date), "value": _num(getattr(r, key), 1)}
                   for r in df.itertuples() if _num(getattr(r, key), 1) is not None]
         if not series:
             continue
-        latest = df.iloc[-1]
+        # "latest" is the most recent day this metric actually has a value — today's row can be
+        # empty (partial sync / mid-day export), and using it would show 0 instead of the real value.
+        present = df[df[key].notna()]
+        latest = present.iloc[-1]
+        latest_dates.append(str(latest["date"]))
         val = _num(latest[key], 1)
         baseline = _num(latest[f"{key}_roll7"], 1)
         z = _num(latest[f"{key}_z"], 2)
@@ -336,6 +341,7 @@ def metrics(person_id: str) -> dict:
         out.append({"key": key, "label": label, "unit": unit, "latest": val,
                     "baseline": baseline, "direction": direction, "neutral": higher_worse is None,
                     "low_data": low_data, "series": series})
+    as_of = max(latest_dates) if latest_dates else str(df.iloc[-1]["date"])
     return {"person_id": person_id, "as_of": as_of, "metrics": out}
 
 
