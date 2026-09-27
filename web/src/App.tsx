@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { SplashScreen } from "./components/SplashScreen";
 import { CaregiverLayout } from "./layouts/CaregiverLayout";
 import { ManagerLayout } from "./layouts/ManagerLayout";
 import { Landing } from "./pages/Landing";
@@ -14,7 +15,9 @@ import { Methods } from "./pages/Methods";
 
 export function App() {
   return (
-    <Routes>
+    <>
+      <SplashScreen />
+      <Routes>
       <Route path="/" element={<Landing />} />
 
       <Route path="/app" element={<CaregiverLayout />}>
@@ -33,6 +36,7 @@ export function App() {
 
       <Route path="/methods" element={<Methods />} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
