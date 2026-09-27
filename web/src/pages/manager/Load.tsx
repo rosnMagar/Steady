@@ -31,10 +31,18 @@ type Mode = "total" | "status";
 function InsightCard() {
   const { data, loading, error } = useAsync(() => api.loadInsight());
   return (
-    <Card className="p-4">
+    // Accent tint + leading rule so the AI read stands out from the plain data cards around it.
+    <Card
+      className="p-4"
+      style={{
+        background: "rgb(var(--accent) / 0.06)",
+        borderLeft: "3px solid rgb(var(--accent-ink))",
+      }}
+    >
       <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
-        <Sparkles className="t-accent" size={18} />
-        <div className="font-semibold t-text">What this week looks like</div>
+        <Sparkles className="t-accent" size={18} aria-hidden />
+        <div className="font-semibold t-text">AI suggestion</div>
+        <span className="text-xs t-muted">· what this week looks like</span>
       </Flex>
       {loading ? (
         <Flex vertical gap={8}>
@@ -44,7 +52,7 @@ function InsightCard() {
         <div className="text-sm t-muted">Insight unavailable right now.</div>
       ) : (
         <>
-          <p className="text-sm t-text" style={{ lineHeight: 1.6, margin: 0 }}>{data.insight}</p>
+          <p className="t-text" style={{ lineHeight: 1.65, margin: 0 }}>{data.insight}</p>
           <div style={{ marginTop: 10 }}>
             <Disclaimer>{data.disclaimer}{data.model ? ` · ${data.model}` : ""}</Disclaimer>
           </div>
@@ -280,6 +288,10 @@ export function Load() {
               </Flex>
             </Card>
 
+            {/* Sits directly under the chart it describes — full width, so it reads as the
+                takeaway from the graph rather than a sidebar footnote. */}
+            <InsightCard />
+
             {capacity != null && overCapacityDays > 0 && (
               <Card className="p-4" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <TriangleAlert className="t-headsup" size={20} style={{ marginTop: 2, flexShrink: 0 }} />
@@ -323,7 +335,6 @@ export function Load() {
                   </Card>
                 </Col>
                 <Col xs={24} md={10}>
-                  <Flex vertical gap={12}>
                   <Card className="p-4">
                     <div className="font-semibold t-text" style={{ marginBottom: 8 }}>By region</div>
                     <Flex vertical gap={10}>
@@ -342,8 +353,6 @@ export function Load() {
                       })}
                     </Flex>
                   </Card>
-                  <InsightCard />
-                  </Flex>
                 </Col>
               </Row>
             )}
