@@ -17,6 +17,12 @@ def get_headsup(person_id: str):
     return repo.headsup(person_id)
 
 
+@router.get("/{person_id}/insight")
+def get_insight(person_id: str):
+    """Cortex read of this person's own 7-day chart, shown under it on the Today screen."""
+    return repo.today_insight(person_id)
+
+
 @router.get("/{person_id}/metrics")
 def get_metrics(person_id: str):
     """Recent daily wearable signals with personal baselines — the data behind the status.

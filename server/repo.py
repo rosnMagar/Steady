@@ -563,6 +563,20 @@ _INSIGHT_FALLBACK = ("Outreach demand is projected to rise into a mid-week peak.
 _RESOURCE_SHAPED = re.compile(r"\b\d{3}[-.\s]\d{3,4}\b|1-8\d\d")
 
 
+# Small models like to announce themselves ("Here is the text:") before answering.
+_PREAMBLE = re.compile(r"^\s*(here(?:'s| is| are)[^:\n]{0,40}:|sure[,!][^\n]{0,40}:|output:|response:)\s*", re.I)
+
+
+def clean_llm_text(text: str) -> str:
+    """Strip the chatty preamble and any wrapping quotes, so the UI shows only the sentences we
+    asked for. Pure — covered by offline tests."""
+    t = (text or "").strip()
+    t = _PREAMBLE.sub("", t).strip()
+    if len(t) >= 2 and t[0] in "\"'" and t[-1] == t[0]:
+        t = t[1:-1].strip()
+    return t
+
+
 def insight_is_safe(text: str) -> bool:
     """Deterministic guard for the Cortex load insight — pure, so it's covered by offline tests.
     Rejects empty output, medical phrasing, and any invented phone number / hotline."""
@@ -614,11 +628,65 @@ def load_insight() -> dict:
         with connect() as c:
             cur = c.cursor()
             cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, %s)", (CORTEX_MODEL, prompt))
-            text = (cur.fetchone()[0] or "").strip()
+            text = clean_llm_text(cur.fetchone()[0] or "")
     except Exception:
         text = ""
     if not insight_is_safe(text):
         return {"insight": _INSIGHT_FALLBACK, "disclaimer": NOTE_DISCLAIMER, "model": None}
+    return {"insight": text, "disclaimer": NOTE_DISCLAIMER, "model": CORTEX_MODEL}
+
+
+_TODAY_FALLBACK = {
+    "steady": "Your signals are tracking close to your usual this week. Nothing here needs your "
+              "attention today — keep doing what's working.",
+    "building": "The next few days look a little heavier than your usual. A small bit of planning "
+                "now can keep it from piling up.",
+    "heads_up": "This week looks like it could be a heavier stretch than usual for you. Where you "
+                "can, be gentle with your schedule and lean on the people around you.",
+}
+
+
+@cached(300)
+def today_insight(person_id: str) -> dict:
+    """The caregiver-facing twin of load_insight: a warm, plain-language read of THEIR own 7-day
+    chart. Same grounding contract — the model only sees numbers computed here, is barred from
+    diagnosing or naming any resource, and anything that trips the guard falls back to fixed text."""
+    pid = resolve(person_id)
+    row = _person_row(pid)
+    status = row["status"] if row is not None else "steady"
+    drivers = _drivers(pid)
+    fc = _q(f"SELECT MAX(forecast) fpeak FROM FORECASTS WHERE person_id='{_esc(pid)}'")
+    fpeak = _num(fc.iloc[0]["fpeak"]) if not fc.empty else None
+    strain_now = _num(row["strain_now"]) if row is not None else None
+    baseline = _num(row["mean"]) if row is not None else None
+    driver_txt = "; ".join(f"{d['label']} is {d['detail']}" for d in drivers) or "nothing notably off"
+    facts = (
+        f"- This week's overall read: {status.replace('_', '-')}\n"
+        f"- Their physical-load score now: {strain_now}; their own usual average: {baseline}\n"
+        f"- Highest point the next 7 days are projected to reach: {fpeak}\n"
+        f"- What's moving it: {driver_txt}"
+    )
+    prompt = (
+        "You are writing to a family caregiver about their own wearable signals for the coming week.\n"
+        "Using ONLY the facts below, write 2-3 short sentences: what the next few days look like for "
+        "them and one gentle, practical thing to keep in mind.\n"
+        "Rules: warm, calm, second person (\"you\"), plain language, never alarming. The score is a "
+        "physical-load proxy, not a medical measure — do NOT diagnose, do NOT give medical advice, and "
+        "do NOT name any program, organization, hotline, or phone number. Do not invent numbers. "
+        "Return only the text.\n\n"
+        f"FACTS:\n{facts}\n"
+    )
+    text = ""
+    try:
+        with connect() as c:
+            cur = c.cursor()
+            cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, %s)", (CORTEX_MODEL, prompt))
+            text = clean_llm_text(cur.fetchone()[0] or "")
+    except Exception:
+        text = ""
+    if not insight_is_safe(text):
+        return {"insight": _TODAY_FALLBACK.get(status, _TODAY_FALLBACK["steady"]),
+                "disclaimer": NOTE_DISCLAIMER, "model": None}
     return {"insight": text, "disclaimer": NOTE_DISCLAIMER, "model": CORTEX_MODEL}
 
 

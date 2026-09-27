@@ -15,6 +15,7 @@ import cohortDetail from "../mocks/cohort_detail.json";
 import methods from "../mocks/methods.json";
 import programsCatalog from "../mocks/programs.json";
 import loadInsight from "../mocks/load_insight.json";
+import todayInsight from "../mocks/today_insight.json";
 
 const USE_API = import.meta.env.VITE_USE_API === "1";
 
@@ -40,6 +41,8 @@ export const api = {
     USE_API ? real<Today>(`/api/caregivers/${id}/today`) : mock<Today>(today),
   headsup: (id: string) =>
     USE_API ? real<HeadsUp>(`/api/caregivers/${id}/headsup`) : mock<HeadsUp>(headsup),
+  todayInsight: (id: string) =>
+    USE_API ? real<LoadInsight>(`/api/caregivers/${id}/insight`) : mock<LoadInsight>(todayInsight, 800),
   metrics: (id: string) =>
     USE_API ? real<Metrics>(`/api/caregivers/${id}/metrics`) : mock<Metrics>(metricsMock),
   cohortSummary: () =>

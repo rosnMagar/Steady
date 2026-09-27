@@ -75,3 +75,26 @@ def test_insight_allows_zips_dates_and_ranges():
     """ZIP codes, ISO dates and numeric ranges must not trip the phone-number guard."""
     assert insight_is_safe("Load concentrates in 63109, 63118 and 63110 on 2026-10-02.")
     assert insight_is_safe("Expect 11-12 contacts per day, peaking at 13.")
+
+
+# ── LLM text cleanup ─────────────────────────────────────────────────────────
+from server.repo import clean_llm_text
+
+
+def test_strips_chatty_preamble():
+    assert clean_llm_text("Here is the text:\n\nYour week looks steady.") == "Your week looks steady."
+    assert clean_llm_text("Here's the response: All clear.") == "All clear."
+
+
+def test_strips_wrapping_quotes():
+    assert clean_llm_text('"Your week looks steady."') == "Your week looks steady."
+
+
+def test_leaves_clean_text_alone():
+    t = "This week builds toward a mid-week peak. Front-load your check-ins."
+    assert clean_llm_text(t) == t
+
+
+def test_does_not_eat_a_real_sentence_starting_with_here():
+    assert clean_llm_text("Here are three quiet days, then a heavier stretch.") == \
+        "Here are three quiet days, then a heavier stretch."

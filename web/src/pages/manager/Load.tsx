@@ -4,11 +4,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Flex, Segmented, InputNumber, Row, Col } from "antd";
-import { ArrowUp, ArrowDown, Minus, ChevronRight, TriangleAlert, Sparkles } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, ChevronRight, TriangleAlert } from "lucide-react";
 import { api } from "../../api/client";
 import { useAsync } from "../../hooks/useAsync";
-import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState, Disclaimer } from "../../components/ui";
+import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState } from "../../components/ui";
 import { CaregiverDrawer } from "./CaregiverDrawer";
+import { AiInsightCard } from "../../components/AiInsightCard";
 import { useColors, tooltipTheme } from "../../lib/colors";
 import { fmtDate } from "../../lib/status";
 import type { LoadDay } from "../../api/types";
@@ -31,34 +32,7 @@ type Mode = "total" | "status";
 function InsightCard() {
   const { data, loading, error } = useAsync(() => api.loadInsight());
   return (
-    // Accent tint + leading rule so the AI read stands out from the plain data cards around it.
-    <Card
-      className="p-4"
-      style={{
-        background: "rgb(var(--accent) / 0.06)",
-        borderLeft: "3px solid rgb(var(--accent-ink))",
-      }}
-    >
-      <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
-        <Sparkles className="t-accent" size={18} aria-hidden />
-        <div className="font-semibold t-text">AI suggestion</div>
-        <span className="text-xs t-muted">· what this week looks like</span>
-      </Flex>
-      {loading ? (
-        <Flex vertical gap={8}>
-          <Skeleton height="0.9rem" /><Skeleton height="0.9rem" /><Skeleton height="0.9rem" width="70%" />
-        </Flex>
-      ) : error || !data ? (
-        <div className="text-sm t-muted">Insight unavailable right now.</div>
-      ) : (
-        <>
-          <p className="t-text" style={{ lineHeight: 1.65, margin: 0 }}>{data.insight}</p>
-          <div style={{ marginTop: 10 }}>
-            <Disclaimer>{data.disclaimer}{data.model ? ` · ${data.model}` : ""}</Disclaimer>
-          </div>
-        </>
-      )}
-    </Card>
+    <AiInsightCard data={data} loading={loading} error={error} subtitle="what this week looks like" />
   );
 }
 

@@ -6,6 +6,7 @@ import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, StatusChip, Skeleton, ErrorState } from "../../components/ui";
 import { ForecastChart } from "../../components/ForecastChart";
 import { MetricsPanel } from "../../components/MetricsPanel";
+import { AiInsightCard } from "../../components/AiInsightCard";
 import { STATUS } from "../../lib/status";
 import type { Driver } from "../../api/types";
 
@@ -26,6 +27,7 @@ function DriverRow({ d, first }: { d: Driver; first: boolean }) {
 export function Today() {
   const { data, loading, error, refetch } = useAsync(() => api.today("p_demo"));
   const metrics = useAsync(() => api.metrics("p_demo"));
+  const insight = useAsync(() => api.todayInsight("p_demo"));
 
   if (loading)
     return (
@@ -67,6 +69,14 @@ export function Today() {
           <div className="text-sm font-medium t-text" style={{ marginBottom: "0.5rem" }}>Next 7 days</div>
           <ForecastChart series={data.series} baseline={data.baseline} />
         </Card>
+
+        {/* Sits directly under the chart it describes, so it reads as the takeaway from the graph. */}
+        <AiInsightCard
+          data={insight.data}
+          loading={insight.loading}
+          error={insight.error}
+          subtitle="what your week looks like"
+        />
 
         <Card className="p-4">
           <div className="text-sm font-medium t-text">What's moving this</div>
