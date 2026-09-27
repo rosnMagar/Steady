@@ -261,3 +261,83 @@ body {
 
 /* Ant Design table rows read as the app's own list. */
 .ant-table-wrapper .ant-table-tbody > tr { cursor: pointer; }
+
+/* ---- Region map (Leaflet) ------------------------------------------------- */
+/* Leaflet ships its own light chrome; these rules put its surfaces on the app's
+   tokens so the map doesn't glow white inside a dark card. */
+.region-map {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgb(var(--border));
+  /* Leaflet panes sit at z-index 400+, which would otherwise ride over the AntD
+     drawer and its mask. */
+  isolation: isolate;
+  z-index: 0;
+}
+.region-map .leaflet-container {
+  font: inherit;
+  background: rgb(var(--surface));
+}
+/* OpenStreetMap only publishes a light basemap, so dark mode inverts the tiles and spins the hue
+   back so water stays blue-ish. Scoped to the tile pane: markers, labels and controls live in
+   their own panes and keep their real colours. */
+:root[data-theme="dark"] .region-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.86) contrast(0.85) saturate(0.45);
+}
+.region-map .leaflet-control-attribution {
+  background: rgb(var(--surface) / 0.85);
+  color: rgb(var(--muted));
+  font-size: 10px;
+}
+.region-map .leaflet-control-attribution a { color: rgb(var(--accent-ink)); }
+.region-map .leaflet-bar a {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  border-bottom-color: rgb(var(--border));
+}
+.region-map .leaflet-bar a:hover { background: rgb(var(--accent) / 0.1); }
+
+/* Hover tooltip: the app's elevated surface, not Leaflet's white box. */
+.leaflet-tooltip.region-map-tip {
+  background: rgb(var(--elevated));
+  border: 1px solid rgb(var(--border));
+  border-radius: 10px;
+  color: rgb(var(--text));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.leaflet-tooltip.region-map-tip::before { display: none; }
+
+/* Direct value label drawn on top of a circle — no box, no arrow, just the number. */
+.leaflet-tooltip.region-map-label {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  /* Labels only land on the ramp's prominent end, which is DARK on light tiles and LIGHT on
+     inverted ones — so the ink flips with the theme, and a halo covers the in-between steps. */
+  color: #ffffff;
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.6), 0 0 2px rgb(0 0 0 / 0.6);
+}
+:root[data-theme="dark"] .leaflet-tooltip.region-map-label {
+  color: #0b1220;
+  text-shadow: 0 0 3px rgb(255 255 255 / 0.55), 0 0 2px rgb(255 255 255 / 0.55);
+}
+.leaflet-tooltip.region-map-label::before { display: none; }
+
+/* Text equivalent of the map: same numbers, reachable without a pointer. */
+.region-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid rgb(var(--border));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+.region-list li { display: flex; align-items: center; gap: 8px; }

@@ -10,6 +10,7 @@ import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, StatTile, StatusChip, Skeleton, ErrorState } from "../../components/ui";
 import { CaregiverDrawer } from "./CaregiverDrawer";
 import { AiInsightCard } from "../../components/AiInsightCard";
+import { RegionMap, type RegionPoint } from "../../components/RegionMap";
 import { useColors, tooltipTheme } from "../../lib/colors";
 import { fmtDate } from "../../lib/status";
 import type { LoadDay } from "../../api/types";
@@ -84,14 +85,19 @@ export function Load() {
     [data, capacity],
   );
 
-  const regionBreakdown = useMemo(() => {
+  // Every region goes to the map (it has room for all of them, unlike the ranked bars it
+  // replaced), carrying the headcount as well as the expected load.
+  const regionBreakdown = useMemo<RegionPoint[]>(() => {
     if (!activeDay) return [];
-    const by: Record<string, number> = {};
-    for (const ctr of activeDay.contributors) by[ctr.region] = (by[ctr.region] ?? 0) + ctr.prob;
+    const by: Record<string, { load: number; people: number }> = {};
+    for (const ctr of activeDay.contributors) {
+      const e = (by[ctr.region] ??= { load: 0, people: 0 });
+      e.load += ctr.prob;
+      e.people += 1;
+    }
     return Object.entries(by)
-      .map(([region, load]) => ({ region, load: Math.round(load * 10) / 10 }))
-      .sort((a, b) => b.load - a.load)
-      .slice(0, 5);
+      .map(([region, v]) => ({ region, load: Math.round(v.load * 10) / 10, people: v.people }))
+      .sort((a, b) => b.load - a.load);
   }, [activeDay]);
 
   const delta = data ? data.projected_total - data.actual_last_week : 0;
@@ -310,22 +316,11 @@ export function Load() {
                 </Col>
                 <Col xs={24} md={10}>
                   <Card className="p-4">
-                    <div className="font-semibold t-text" style={{ marginBottom: 8 }}>By region</div>
-                    <Flex vertical gap={10}>
-                      {regionBreakdown.map((r) => {
-                        const max = regionBreakdown[0]?.load || 1;
-                        return (
-                          <div key={r.region}>
-                            <Flex justify="space-between" className="text-xs t-muted" style={{ marginBottom: 2 }}>
-                              <span>{r.region}</span><span>{r.load}</span>
-                            </Flex>
-                            <div style={{ height: 8, borderRadius: 4, background: "rgb(var(--border))" }}>
-                              <div style={{ width: `${(r.load / max) * 100}%`, height: "100%", borderRadius: 4, background: c.accent }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <Flex align="baseline" justify="space-between" gap={8} style={{ marginBottom: 8 }}>
+                      <div className="font-semibold t-text">Where the load is</div>
+                      <div className="text-xs t-muted">{fmtDate(activeDay.date)}</div>
                     </Flex>
+                    <RegionMap points={regionBreakdown} />
                   </Card>
                 </Col>
               </Row>

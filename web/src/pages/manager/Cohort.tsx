@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Table, Input, Segmented, Row, Col, type TableColumnsType } from "antd";
 import { api } from "../../api/client";
@@ -8,6 +8,8 @@ import { Sparkline } from "../../components/Sparkline";
 import { CaregiverDrawer } from "./CaregiverDrawer";
 import type { CohortRow, Status } from "../../api/types";
 import { fmtDate } from "../../lib/status";
+
+const DEFAULT_PAGE_SIZE = 10;
 
 const FILTERS: { label: string; value: Status | "all" }[] = [
   { label: "All", value: "all" },
@@ -22,6 +24,8 @@ export function Cohort() {
   const [filter, setFilter] = useState<Status | "all">("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const filtered = useMemo(() => {
     const list = rows.data ?? [];
@@ -30,6 +34,10 @@ export function Cohort() {
       .filter((r) => r.name.toLowerCase().includes(q.toLowerCase()))
       .sort((a, b) => b.forecast_peak - a.forecast_peak);
   }, [rows.data, filter, q]);
+
+  // Filtering while on page 3 would otherwise land the manager on an empty page — the highest-risk
+  // caregivers are on page 1, and a new filter is a new ranking.
+  useEffect(() => setPage(1), [filter, q]);
 
   const columns: TableColumnsType<CohortRow> = [
     {
@@ -93,7 +101,24 @@ export function Cohort() {
               columns={columns}
               dataSource={filtered}
               rowKey="person_id"
-              pagination={false}
+              // The cohort is ranked, so paging is a real navigation aid rather than a scroll
+              // substitute: page 1 is always "who to call today".
+              pagination={{
+                current: page,
+                pageSize,
+                total: filtered.length,
+                onChange: (p, size) => {
+                  setPage(p);
+                  setPageSize(size);
+                },
+                showSizeChanger: filtered.length > DEFAULT_PAGE_SIZE,
+                pageSizeOptions: [10, 25, 50],
+                size: "small",
+                responsive: true,
+                hideOnSinglePage: true,
+                showTotal: (total, [from, to]) => `${from}–${to} of ${total}`,
+                style: { padding: "0 16px", margin: "12px 0" },
+              }}
               size="small"
               // Rows open the detail drawer, so they must behave like buttons for keyboard and
               // screen-reader users too — not just for the mouse.
