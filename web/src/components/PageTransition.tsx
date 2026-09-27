@@ -5,6 +5,9 @@ import { motion, useReducedMotion, type Transition } from "framer-motion";
 export const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 export const PAGE_TRANSITION: Transition = { duration: 0.32, ease: EASE };
 
+// Spring used by the sliding active-route indicator in the nav bars.
+export const NAV_SPRING: Transition = { type: "spring", stiffness: 380, damping: 30 };
+
 /**
  * Wraps routed content so it slides/fades in on entry and out on exit.
  * Place inside an <AnimatePresence mode="wait"> keyed by the route path.

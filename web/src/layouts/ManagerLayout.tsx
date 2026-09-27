@@ -1,9 +1,9 @@
 import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "antd";
 import { useTheme } from "../lib/theme";
-import { PageTransition } from "../components/PageTransition";
+import { PageTransition, NAV_SPRING } from "../components/PageTransition";
 
 const nav = [
   { to: "/dashboard", label: "Cohort", end: true },
@@ -14,6 +14,7 @@ const nav = [
 export function ManagerLayout() {
   const { theme, toggle } = useTheme();
   const location = useLocation();
+  const reduce = useReducedMotion();
   return (
     <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
       <header
@@ -30,13 +31,21 @@ export function ManagerLayout() {
               {nav.map(({ to, label, end }) => (
                 <NavLink
                   key={to} to={to} end={end}
-                  className={({ isActive }) => `text-sm font-medium no-underline ${isActive ? "t-accent" : "t-muted"}`}
-                  style={({ isActive }) => ({
-                    padding: "0.5rem 0.75rem", borderRadius: 8,
-                    background: isActive ? "rgb(var(--accent-soft))" : undefined,
-                  })}
+                  className="text-sm font-medium no-underline"
+                  style={{ position: "relative", padding: "0.5rem 0.75rem", borderRadius: 8 }}
                 >
-                  {label}
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span
+                          layoutId="mgr-nav-indicator"
+                          transition={reduce ? { duration: 0 } : NAV_SPRING}
+                          style={{ position: "absolute", inset: 0, borderRadius: 8, background: "rgb(var(--accent-soft))", zIndex: 0 }}
+                        />
+                      )}
+                      <span className={isActive ? "t-accent" : "t-muted"} style={{ position: "relative", zIndex: 1 }}>{label}</span>
+                    </>
+                  )}
                 </NavLink>
               ))}
             </nav>

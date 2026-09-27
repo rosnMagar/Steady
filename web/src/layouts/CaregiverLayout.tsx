@@ -1,9 +1,9 @@
 import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Home, HeartPulse, ShieldCheck, Sun, Moon, ClipboardCheck } from "lucide-react";
 import { Button } from "antd";
 import { useTheme } from "../lib/theme";
-import { PageTransition } from "../components/PageTransition";
+import { PageTransition, NAV_SPRING } from "../components/PageTransition";
 
 const nav = [
   { to: "/app", icon: Home, label: "Today", end: true },
@@ -15,6 +15,7 @@ const nav = [
 export function CaregiverLayout() {
   const { theme, toggle } = useTheme();
   const location = useLocation();
+  const reduce = useReducedMotion();
   return (
     <div style={{ minHeight: "100vh", background: "rgb(var(--bg))", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "28rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -47,11 +48,22 @@ export function CaregiverLayout() {
           {nav.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to} to={to} end={end}
-              className={({ isActive }) => `no-underline text-xs ${isActive ? "t-accent" : "t-muted"}`}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "0.625rem 0", minHeight: 44 }}
+              className="no-underline text-xs"
+              style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "0.625rem 0", minHeight: 44 }}
             >
-              <Icon size={20} />
-              {label}
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.span
+                      layoutId="cg-nav-indicator"
+                      transition={reduce ? { duration: 0 } : NAV_SPRING}
+                      style={{ position: "absolute", top: 0, width: 28, height: 3, borderRadius: 9999, background: "rgb(var(--accent))" }}
+                    />
+                  )}
+                  <Icon size={20} className={isActive ? "t-accent" : "t-muted"} />
+                  <span className={isActive ? "t-accent" : "t-muted"}>{label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
