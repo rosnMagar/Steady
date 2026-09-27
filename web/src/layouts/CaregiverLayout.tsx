@@ -1,7 +1,9 @@
-import { Outlet, NavLink, Link } from "react-router-dom";
+import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Home, HeartPulse, ShieldCheck, Sun, Moon, ClipboardCheck } from "lucide-react";
 import { Button } from "antd";
 import { useTheme } from "../lib/theme";
+import { PageTransition } from "../components/PageTransition";
 
 const nav = [
   { to: "/app", icon: Home, label: "Today", end: true },
@@ -12,6 +14,7 @@ const nav = [
 
 export function CaregiverLayout() {
   const { theme, toggle } = useTheme();
+  const location = useLocation();
   return (
     <div style={{ minHeight: "100vh", background: "rgb(var(--bg))", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "28rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -28,7 +31,11 @@ export function CaregiverLayout() {
         </header>
 
         <main style={{ flex: 1, padding: "1.25rem 1.25rem 6rem" }}>
-          <Outlet />
+          <AnimatePresence mode="wait" initial={false}>
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </main>
 
         <nav

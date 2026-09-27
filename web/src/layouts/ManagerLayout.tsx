@@ -1,7 +1,9 @@
-import { Outlet, NavLink, Link } from "react-router-dom";
+import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "antd";
 import { useTheme } from "../lib/theme";
+import { PageTransition } from "../components/PageTransition";
 
 const nav = [
   { to: "/dashboard", label: "Cohort", end: true },
@@ -11,6 +13,7 @@ const nav = [
 
 export function ManagerLayout() {
   const { theme, toggle } = useTheme();
+  const location = useLocation();
   return (
     <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
       <header
@@ -43,7 +46,11 @@ export function ManagerLayout() {
         </div>
       </header>
       <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "1.5rem" }}>
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+        </AnimatePresence>
       </main>
     </div>
   );
