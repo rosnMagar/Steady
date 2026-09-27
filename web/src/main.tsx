@@ -17,8 +17,8 @@ function AntdRoot({ children }: { children: ReactNode }) {
       theme={{
         algorithm: theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          // Only nudge the font; colors/surfaces/radii come from AntD's defaults.
-          fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+          // Academic serif; colors/surfaces/radii come from AntD's defaults.
+          fontFamily: '"Source Serif 4", Georgia, "Times New Roman", serif',
         },
       }}
     >
