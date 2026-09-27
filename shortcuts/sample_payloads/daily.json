@@ -1,6 +1,7 @@
 {
+  "_comment": "SHAPE REFERENCE ONLY — do not POST this file as-is. 'date' must come from the Shortcut's Current Date variable (Format Date -> yyyy-MM-dd), not a literal. This is the already-clean shape; what the phone actually sends is daily_raw_shortcut.json, which the server normalizes.",
   "person_id": "p_roshan",
-  "date": "2026-10-03",
+  "date": "2026-09-26",
   "steps": 7412,
   "resting_hr": 58,
   "hrv_ms": 46,

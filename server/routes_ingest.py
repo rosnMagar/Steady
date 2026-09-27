@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from server import repo
 from server.auth import require_ingest_token
-from server.normalize import normalize_daily, sleep_metrics, NormalizationError
+from server.normalize import normalize_daily, parse_local_date, sleep_metrics, NormalizationError
 from server.schemas import DailyRaw, BackfillBody, Checkin
 
 router = APIRouter(prefix="/ingest", tags=["ingest"], dependencies=[Depends(require_ingest_token)])
@@ -46,8 +46,14 @@ def ingest_backfill(body: BackfillBody):
 
 @router.post("/checkin")
 def ingest_checkin(c: Checkin):
+    # Normalize the date the same way the daily route does, instead of passing the string straight
+    # through: an unvalidated date let a future-dated check-in land, joining to no wearable day.
+    try:
+        d = parse_local_date(c.date)
+    except NormalizationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     # Map the 1-5 self-report onto the same 0-100 scale as the strain target; keep raw parts in detail.
     strain_label = round((c.stress - 1) / 4 * 100, 1)
     detail = json.dumps({"stress_1_5": c.stress, "tags": c.tags})
-    repo.upsert_checkin(c.person_id, c.date, strain_label, detail, c.source)
-    return {"ok": True}
+    repo.upsert_checkin(c.person_id, d.isoformat(), strain_label, detail, c.source)
+    return {"ok": True, "date": d.isoformat()}

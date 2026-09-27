@@ -80,7 +80,17 @@ leading `Bearer `, so either form works).
    needs ≥ 30 usable days** before it will forecast a live person (fewer and they're skipped as
    "baseline not ready").
 3. **Daily Check-in** (Automation, evening): **Ask for Input** (Number, "How heavy did today feel?
-   1–5"), optionally **Choose from Menu** for tags, POST to `/ingest/checkin`.
+   1–5"), optionally **Choose from Menu** for tags, POST to `/ingest/checkin`. Build the body the
+   same way as the spike — **`date` must be the Current Date chip** (Format Date → `yyyy-MM-dd`),
+   never a typed date:
+   ```
+   {"person_id":"p_roshan","date":"<CurrentDate>","stress":<Input>,"tags":[],"source":"apple_watch"}
+   ```
+   A check-in is the training label for that day, so it has to land on the same calendar day as the
+   wearable row or it joins to nothing. The files in `sample_payloads/` are **shape references, not
+   things to POST** — their dates are examples. The server rejects a date more than a day ahead with
+   a 422 and echoes the day it stored (`{"ok":true,"date":"2026-09-26"}`), so a wrong chip shows up
+   on the first run instead of weeks later.
 
 ## Adding sleep to the Daily Sync (required)
 

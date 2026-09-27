@@ -6,7 +6,7 @@ phone actually sends and RAW_DAILY stays tidy. Pure functions — no I/O, fully 
 """
 from __future__ import annotations
 import re
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 # Sleep-stage values that count as time asleep, as the Shortcut's picker spells them.
 _ASLEEP_SHORT = {"core", "rem", "deep", "asleep", "unspecified"}
@@ -32,24 +32,35 @@ def _to_float(v, field: str):
         raise NormalizationError(f"{field!r} is not a number: {v!r}")
 
 
-def parse_local_date(value: str) -> date:
+def parse_local_date(value: str, *, allow_future_days: int = 1) -> date:
     """Accept a date-only 'YYYY-MM-DD' or a full ISO timestamp; keep the local calendar date.
 
     A timestamp like '2026-09-26T13:46:53-05:00' stores as 2026-09-26 (the phone's local day),
     NOT shifted to UTC — the day is what the caregiver experienced.
+
+    Dates further than `allow_future_days` ahead are rejected. A day that hasn't happened yet can't
+    have been measured or experienced, and such a row joins to nothing: it silently orphans itself
+    from the wearable series instead of failing. One day of slack covers the phone's timezone being
+    ahead of the server's.
     """
     if not isinstance(value, str) or not value.strip():
         raise NormalizationError("date is required")
     s = value.strip()
     try:
         # date() of a tz-aware datetime keeps the local wall-clock day (no UTC shift).
-        return datetime.fromisoformat(s).date()
+        d = datetime.fromisoformat(s).date()
     except ValueError:
-        pass
-    try:
-        return date.fromisoformat(s[:10])
-    except ValueError:
-        raise NormalizationError(f"unparseable date: {value!r}")
+        try:
+            d = date.fromisoformat(s[:10])
+        except ValueError:
+            raise NormalizationError(f"unparseable date: {value!r}")
+    horizon = date.today() + timedelta(days=allow_future_days)
+    if d > horizon:
+        raise NormalizationError(
+            f"date {d.isoformat()} is in the future (today is {date.today().isoformat()}); "
+            "check that the Shortcut inserts the Current Date variable instead of a literal date"
+        )
+    return d
 
 
 # How a sleep interval's timestamps can arrive. The Shortcut's Format Date action decides the

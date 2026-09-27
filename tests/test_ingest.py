@@ -1,5 +1,7 @@
 """Ingest route behavior: auth (200/401), idempotency, validation. No Snowflake — the DB writers
 are monkeypatched, so these run offline."""
+from datetime import date, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -7,6 +9,11 @@ from server.main import app
 from server import repo
 
 client = TestClient(app)  # no context manager -> startup events don't fire (no Snowflake at import)
+
+# Relative, not hard-coded: a literal date drifts into the future as time passes, and the
+# ingest routes now reject future dates.
+YESTERDAY = (date.today() - timedelta(days=1)).isoformat()
+NEXT_WEEK = (date.today() + timedelta(days=7)).isoformat()
 
 TOKEN = "test-token"  # clean secret; the fixture forces auth to use it
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
@@ -68,7 +75,7 @@ def test_daily_validation_missing_fields():
 
 
 def test_backfill_caps_at_60():
-    many = {"days": [dict(DAILY, date=f"2026-09-{d:02d}") for d in range(1, 30)] * 3}  # 87 > 60
+    many = {"days": [dict(DAILY, date=f"2026-08-{d:02d}") for d in range(1, 30)] * 3}  # 87 > 60
     r = client.post("/ingest/backfill", json=many, headers=AUTH)
     assert r.status_code == 422
 
@@ -81,11 +88,25 @@ def test_backfill_ok():
 
 
 def test_checkin_validation_stress_range():
-    bad = {"person_id": "p_test", "date": "2026-10-03", "stress": 9}
+    bad = {"person_id": "p_test", "date": YESTERDAY, "stress": 9}
     assert client.post("/ingest/checkin", json=bad, headers=AUTH).status_code == 422
 
 
 def test_checkin_ok():
-    good = {"person_id": "p_test", "date": "2026-10-03", "stress": 4, "tags": ["poor_sleep"]}
+    good = {"person_id": "p_test", "date": YESTERDAY, "stress": 4, "tags": ["poor_sleep"]}
     r = client.post("/ingest/checkin", json=good, headers=AUTH)
-    assert r.status_code == 200 and r.json() == {"ok": True}
+    assert r.status_code == 200 and r.json() == {"ok": True, "date": YESTERDAY}
+
+
+def test_checkin_rejects_future_date():
+    """A check-in for a day that hasn't happened joins to no wearable row; it used to land
+    silently because the route passed the date string straight to Snowflake."""
+    ahead = {"person_id": "p_test", "date": NEXT_WEEK, "stress": 4}
+    r = client.post("/ingest/checkin", json=ahead, headers=AUTH)
+    assert r.status_code == 422 and "future" in r.json()["detail"]
+
+
+def test_checkin_normalizes_timestamp_to_local_day():
+    ts = {"person_id": "p_test", "date": "2026-09-26T13:46:53-05:00", "stress": 3}
+    r = client.post("/ingest/checkin", json=ts, headers=AUTH)
+    assert r.status_code == 200 and r.json()["date"] == "2026-09-26"

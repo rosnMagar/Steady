@@ -1,8 +1,14 @@
 """Normalization of the raw iPhone-Shortcut payload. Pure functions — no Snowflake needed."""
 import json
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
+
+# Dates are relative to today, not hard-coded: a literal that is "safely in the past" today becomes
+# a future date later and silently changes what these tests exercise.
+YESTERDAY = (date.today() - timedelta(days=1)).isoformat()
+NEXT_WEEK = (date.today() + timedelta(days=7)).isoformat()
 
 from server.normalize import (
     normalize_daily, sleep_minutes, parse_local_date, NormalizationError,
@@ -39,16 +45,16 @@ def test_awake_intervals_excluded():
 
 
 def test_clean_shapes_pass_through():
-    row = normalize_daily({"person_id": "p1", "date": "2026-10-03", "resting_hr": 58,
+    row = normalize_daily({"person_id": "p1", "date": YESTERDAY, "resting_hr": 58,
                            "sleep_minutes": 401, "steps": 7412})
     assert row["resting_hr"] == 58.0
     assert row["sleep_minutes"] == 401.0
-    assert row["date"] == "2026-10-03"
+    assert row["date"] == YESTERDAY
 
 
 def test_missing_person_id_rejected():
     with pytest.raises(NormalizationError):
-        normalize_daily({"date": "2026-10-03"})
+        normalize_daily({"date": YESTERDAY})
 
 
 def test_bad_date_rejected():
@@ -57,7 +63,7 @@ def test_bad_date_rejected():
 
 
 def test_no_sleep_data_is_none():
-    row = normalize_daily({"person_id": "p1", "date": "2026-10-03"})
+    row = normalize_daily({"person_id": "p1", "date": YESTERDAY})
     assert row["sleep_minutes"] is None
     assert row["resting_hr"] is None
 
@@ -65,6 +71,26 @@ def test_no_sleep_data_is_none():
 def test_parse_local_date_accepts_both_forms():
     assert parse_local_date("2026-09-26").isoformat() == "2026-09-26"
     assert parse_local_date("2026-09-26T13:46:53-05:00").isoformat() == "2026-09-26"
+
+
+# ── future dates (regression: a check-in dated a week ahead landed and joined to nothing) ──
+
+def test_future_date_rejected():
+    with pytest.raises(NormalizationError, match="future"):
+        parse_local_date(NEXT_WEEK)
+
+
+def test_today_and_tomorrow_accepted():
+    """Tomorrow is allowed: the phone's timezone can be a day ahead of the server's."""
+    today = date.today()
+    assert parse_local_date(today.isoformat()) == today
+    tomorrow = today + timedelta(days=1)
+    assert parse_local_date(tomorrow.isoformat()) == tomorrow
+
+
+def test_normalize_daily_rejects_future_date():
+    with pytest.raises(NormalizationError, match="future"):
+        normalize_daily({"person_id": "p1", "date": NEXT_WEEK, "steps": 100})
 
 
 # ── sleep stage naming (regression: full HealthKit identifiers silently yielded no sleep) ──
