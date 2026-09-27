@@ -16,6 +16,7 @@ type ShareResult = "shared" | "copied" | "cancelled" | "failed";
  *  caller can confirm it — a tap that silently does nothing is the worst outcome here. */
 async function shareProgram(p: { name: string; org: string; url: string; phone?: string }): Promise<ShareResult> {
   const text = `${p.name} — ${p.org}${p.phone ? ` · ${p.phone}` : ""}`;
+  const payload = `${text}\n${p.url}`;
   if (navigator.share) {
     try {
       await navigator.share({ title: p.name, text, url: p.url });
@@ -25,11 +26,33 @@ async function shareProgram(p: { name: string; org: string; url: string; phone?:
       if (e instanceof Error && e.name === "AbortError") return "cancelled";
     }
   }
+  // Optional chaining matters: on a non-secure origin (the demo is served over plain HTTP)
+  // Safari doesn't expose navigator.clipboard at all, so touching .writeText would throw.
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(payload);
+      return "copied";
+    } catch { /* fall through to the legacy path */ }
+  }
+  return legacyCopy(payload) ? "copied" : "failed";
+}
+
+/** Pre-Clipboard-API copy. Still the only thing that works on an insecure origin, which is how
+ *  the demo is served. iOS needs the explicit selection range — .select() alone is ignored. */
+function legacyCopy(text: string): boolean {
   try {
-    await navigator.clipboard.writeText(`${text}\n${p.url}`);
-    return "copied";
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
   } catch {
-    return "failed";
+    return false;
   }
 }
 

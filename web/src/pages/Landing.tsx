@@ -25,7 +25,7 @@ function Glow({ color, size, top, left, delay = 0, drift }: {
 
 export function Landing() {
   return (
-    <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh", background: "rgb(var(--bg))", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 1.5rem" }}>
+    <div className="min-h-screen" style={{ position: "relative", overflow: "hidden", background: "rgb(var(--bg))", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 1.5rem" }}>
       <Glow color="rgb(var(--accent) / 0.35)" size={420} top="-8%" left="-6%" drift={[40, 30]} />
       <Glow color="rgb(var(--steady) / 0.28)" size={360} top="55%" left="70%" delay={2} drift={[-50, -25]} />
       <Glow color="rgb(var(--building) / 0.20)" size={300} top="70%" left="10%" delay={4} drift={[30, -40]} />
@@ -37,7 +37,7 @@ export function Landing() {
         className="text-center"
         style={{ position: "relative", zIndex: 1, maxWidth: "32rem", margin: "0 auto" }}
       >
-        <motion.div variants={staggerItem} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0.35rem 0.85rem", borderRadius: 9999, border: "1px solid rgb(var(--border))", background: "rgb(var(--surface) / 0.6)", backdropFilter: "blur(6px)" }}>
+        <motion.div variants={staggerItem} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0.35rem 0.85rem", borderRadius: 9999, border: "1px solid rgb(var(--border))", background: "rgb(var(--surface) / 0.6)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}>
           <Activity size={14} className="t-accent" />
           <span className="text-xs t-muted">Caregiver strain, seen days ahead</span>
         </motion.div>

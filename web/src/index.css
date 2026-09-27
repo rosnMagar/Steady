@@ -155,6 +155,26 @@ body {
 
 .min-tap { min-height: 44px; }
 
+/* iOS Safari sizes 100vh to the viewport WITHOUT the collapsing toolbar, so a 100vh column
+   overflows and a fixed bottom bar hides behind the browser chrome. dvh tracks the visible
+   viewport; the 100vh line stays first as the fallback for Safari < 15.4. */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Clears the iPhone home indicator. Needs viewport-fit=cover, which index.html sets. */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* iOS Safari zooms the page in whenever you focus a control whose font-size is under 16px,
+   and never zooms back out. Ant Design's inputs are 14px, so pin them to 16px on phones. */
+@media (max-width: 480px) {
+  input, select, textarea,
+  .ant-input, .ant-input-number-input, .ant-select-selection-search-input {
+    font-size: 16px;
+  }
+}
+
 /* Interactive row in the weekly-load drill-down. A real <button> so it's keyboard reachable;
    min-height keeps it a comfortable touch target on a phone. */
 .load-contrib {

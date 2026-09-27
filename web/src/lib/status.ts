@@ -29,6 +29,15 @@ export const STATUS: Record<Status, StatusMeta> = {
 };
 
 export function fmtDate(iso: string): string {
-  const d = new Date(iso + "T00:00:00");
+  // Safari's Date parser is far stricter than Chrome's: anything that isn't a format it
+  // recognises yields Invalid Date, which would render the literal string "Invalid Date".
+  // Parse the Y-M-D parts explicitly (local midnight, so the day never shifts by timezone)
+  // and fall back to the raw value rather than showing a broken date.
+  if (!iso) return "—";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  const d = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+    : new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

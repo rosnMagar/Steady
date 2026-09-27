@@ -16,11 +16,11 @@ export function ManagerLayout() {
   const location = useLocation();
   const reduce = useReducedMotion();
   return (
-    <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
+    <div className="min-h-screen" style={{ background: "rgb(var(--bg))" }}>
       <header
         style={{
           position: "sticky", top: 0, zIndex: 10,
-          background: "rgb(var(--bg) / 0.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgb(var(--border))",
+          background: "rgb(var(--bg) / 0.9)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderBottom: "1px solid rgb(var(--border))",
         }}
       >
         <div style={{ maxWidth: "72rem", margin: "0 auto", height: "4rem", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

@@ -18,7 +18,7 @@ export function Methods() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "rgb(var(--bg))" }}>
+    <div className="min-h-screen" style={{ background: "rgb(var(--bg))" }}>
       <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "2rem 1.5rem" }}>
         <Link to="/" className="text-sm t-accent no-underline" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <ArrowLeft size={16} /> Back

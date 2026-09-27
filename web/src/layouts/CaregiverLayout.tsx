@@ -17,13 +17,17 @@ export function CaregiverLayout() {
   const location = useLocation();
   const reduce = useReducedMotion();
   return (
-    <div style={{ minHeight: "100vh", background: "rgb(var(--bg))", display: "flex", justifyContent: "center" }}>
-      <div style={{ width: "100%", maxWidth: "28rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="min-h-screen" style={{ background: "rgb(var(--bg))", display: "flex", justifyContent: "center" }}>
+      <div className="min-h-screen" style={{ width: "100%", maxWidth: "28rem", display: "flex", flexDirection: "column" }}>
         <header
           style={{
             position: "sticky", top: 0, zIndex: 10, height: "3.5rem",
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1.25rem",
-            background: "rgb(var(--bg) / 0.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgb(var(--border))",
+            background: "rgb(var(--bg) / 0.9)",
+            // Safari only supports the unprefixed property from 18.0; without the -webkit- form the
+            // blur silently does nothing on every earlier iOS.
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            borderBottom: "1px solid rgb(var(--border))",
           }}
         >
           <Link to="/" className="text-lg font-semibold t-text no-underline" style={{ letterSpacing: "-0.01em" }}>Steady</Link>
@@ -31,7 +35,8 @@ export function CaregiverLayout() {
             icon={theme === "light" ? <Moon size={18} /> : <Sun size={18} />} />
         </header>
 
-        <main style={{ flex: 1, padding: "1.25rem 1.25rem 6rem" }}>
+        {/* Bottom padding clears the fixed tab bar plus the home indicator. */}
+        <main style={{ flex: 1, padding: "1.25rem 1.25rem calc(6rem + env(safe-area-inset-bottom, 0px))" }}>
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
               <Outlet />
@@ -40,9 +45,11 @@ export function CaregiverLayout() {
         </main>
 
         <nav
+          className="safe-bottom"
           style={{
             position: "fixed", bottom: 0, width: "100%", maxWidth: "28rem", display: "flex",
-            borderTop: "1px solid rgb(var(--border))", background: "rgb(var(--surface) / 0.95)", backdropFilter: "blur(8px)",
+            borderTop: "1px solid rgb(var(--border))", background: "rgb(var(--surface) / 0.95)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
           }}
         >
           {nav.map(({ to, icon: Icon, label, end }) => (
