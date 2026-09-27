@@ -63,4 +63,11 @@ export const api = {
           { draft: "Hi, this is your care team checking in. This past week may have been a heavier stretch than usual — would a short call about support options help? No pressure, we're just here for you." },
           700,
         ),
+  feedback: (id: string, programId: string, helpful: boolean) =>
+    USE_API
+      ? real<{ ok: boolean }>(`/api/caregivers/${id}/feedback`, {
+          method: "POST",
+          body: JSON.stringify({ program_id: programId, helpful }),
+        })
+      : mock<{ ok: boolean }>({ ok: true }, 0),
 };

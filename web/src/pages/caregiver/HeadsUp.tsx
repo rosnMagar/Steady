@@ -6,8 +6,14 @@ import { useAsync } from "../../hooks/useAsync";
 import { Card, Section, Skeleton, ErrorState, Button, Disclaimer } from "../../components/ui";
 import type { Program } from "../../api/types";
 
-function ProgramCard({ p }: { p: Program }) {
+function ProgramCard({ p, personId }: { p: Program; personId: string }) {
   const [feedback, setFeedback] = useState<"saved" | "not_helpful" | null>(null);
+  // Optimistic: reflect the tap immediately; the POST is fire-and-forget so an offline/mock
+  // backend never blocks the UI.
+  const send = (next: "saved" | "not_helpful") => {
+    setFeedback(next);
+    void api.feedback(personId, p.program_id, next === "saved").catch(() => {});
+  };
   return (
     <Card className="p-4">
       <div className="font-semibold t-text">{p.name}</div>
@@ -22,10 +28,10 @@ function ProgramCard({ p }: { p: Program }) {
         <a href={p.url} target="_blank" rel="noreferrer" className="no-underline">
           <Button variant="outline" className="text-sm"><ExternalLink size={16} /> Visit</Button>
         </a>
-        <Button variant="ghost" className="text-sm" onClick={() => setFeedback("saved")}>
+        <Button variant="ghost" className="text-sm" onClick={() => send("saved")}>
           <Bookmark size={16} /> {feedback === "saved" ? "Saved" : "Save"}
         </Button>
-        <Button variant="ghost" className="text-sm t-muted" onClick={() => setFeedback("not_helpful")}>
+        <Button variant="ghost" className="text-sm t-muted" onClick={() => send("not_helpful")}>
           <ThumbsDown size={16} /> {feedback === "not_helpful" ? "Noted" : "Not helpful"}
         </Button>
       </Flex>
@@ -33,8 +39,10 @@ function ProgramCard({ p }: { p: Program }) {
   );
 }
 
+const PERSON_ID = "p_demo";
+
 export function HeadsUp() {
-  const { data, loading, error, refetch } = useAsync(() => api.headsup("p_demo"));
+  const { data, loading, error, refetch } = useAsync(() => api.headsup(PERSON_ID));
 
   if (loading) return <Flex vertical gap={16}><Skeleton height="7rem" /><Skeleton height="10rem" /><Skeleton height="10rem" /></Flex>;
   if (error || !data) return <ErrorState message={error ?? "No data"} onRetry={refetch} />;
@@ -60,7 +68,7 @@ export function HeadsUp() {
         </Card>
 
         <Flex vertical gap={12}>
-          {data.programs.map((p) => <ProgramCard key={p.program_id} p={p} />)}
+          {data.programs.map((p) => <ProgramCard key={p.program_id} p={p} personId={PERSON_ID} />)}
         </Flex>
 
         <Card className="p-4" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>

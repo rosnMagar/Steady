@@ -49,7 +49,7 @@
 - [x] Program grounding by CONSTRUCTION: select_programs() picks ids in code, LLM writes prose only
       -> zero id-hallucination. PROGRAMS loaded (12). BRIEFS populated (26 rows: 13 caregiver+13 manager).
 - [x] Guardrail tests pass (7): invented-id dropped, <=2 programs, medical-phrase flagged, 988 constant.
-- [ ] polish: reword driver phrases (8B echoed "drivers ..."); optional outreach-draft; eval set
+- [x] polish: reword driver phrases (8B echoed "drivers ..." — fixed, prompt relabeled); outreach-draft (real Cortex, wired); eval set (src/eval_llm.py)
 
 ## Phase 4 — Backend  [core DONE]
 - [x] FastAPI ingest endpoints + tests (server/): /ingest/daily,/backfill,/checkin. normalize.py turns the
