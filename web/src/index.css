@@ -78,6 +78,15 @@ body {
 .text-center   { text-align: center; }
 .no-underline  { text-decoration: none; }
 
+/* Spacing + sizing utilities (Tailwind-scale) used for card padding etc. */
+.p-0 { padding: 0; }
+.p-3 { padding: 0.75rem; }
+.p-4 { padding: 1rem; }
+.p-5 { padding: 1.25rem; }
+.p-6 { padding: 1.5rem; }
+.mt-1 { margin-top: 0.25rem; }
+.w-full { width: 100%; }
+
 /* Base container styled like an Ant Design Card: flat, thin border, 8px radius. */
 .app-card {
   background: rgb(var(--surface));
