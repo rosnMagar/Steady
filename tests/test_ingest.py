@@ -43,7 +43,13 @@ def test_daily_rejects_wrong_token():
 def test_daily_accepts_valid_token_and_normalizes(_capture_writes):
     r = client.post("/ingest/daily", json=DAILY, headers=AUTH)
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "person_id": "p_test", "date": "2026-09-26"}
+    body = r.json()
+    assert (body["ok"], body["person_id"], body["date"]) == (True, "p_test", "2026-09-26")
+    # The response reports what the sleep parser made of the payload, so a null sleep value on the
+    # phone is diagnosable instead of silent.
+    assert body["sleep"]["minutes"] == 30.0
+    assert body["sleep"]["intervals_received"] == body["sleep"]["intervals_used"] == 1
+    assert body["sleep"]["unrecognized_values"] == []
     row = _capture_writes["daily"][0][0]
     assert row["resting_hr"] == 61.0 and row["sleep_minutes"] == 30.0
 

@@ -8,8 +8,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, date
 
-# Sleep-stage values that count as time asleep (Awake is excluded).
-_ASLEEP = {"core", "rem", "deep", "asleep"}
+# Sleep-stage values that count as time asleep, as the Shortcut's picker spells them.
+_ASLEEP_SHORT = {"core", "rem", "deep", "asleep", "unspecified"}
 # The Shortcut formats times as "Sep 26, 2026 at 1:16 AM" with a NARROW NO-BREAK SPACE (U+202F)
 # before AM/PM, and sometimes a regular/again-narrow space elsewhere. Normalize all unicode spaces.
 _UNICODE_SPACES = dict.fromkeys(map(ord, "    ⁠"), " ")
@@ -56,26 +56,87 @@ def _parse_ts(s: str) -> datetime:
     return datetime.strptime(_clean_spaces(s), "%b %d, %Y at %I:%M %p")
 
 
-def sleep_minutes(sleep_raw) -> float | None:
-    """Sum minutes of asleep-stage intervals. Returns None if no interval data is present."""
-    if not sleep_raw:
+def classify_sleep_stage(value) -> str | None:
+    """Map a sleep-stage label to 'asleep' | 'awake' | 'inbed', or None if unrecognised.
+
+    Tolerates every spelling these values arrive in, because the source decides the form and we
+    got burned by assuming one: the Shortcuts picker yields short names ("Core", "REM"), while
+    HealthKit and the Health export use the full identifier
+    ("HKCategoryValueSleepAnalysisAsleepCore"). Order matters — test 'awake'/'inbed' before
+    'asleep', since "Awake" must never be counted as sleep.
+    """
+    v = _clean_spaces(str(value or "")).lower().replace(" ", "")
+    if not v:
         return None
+    v = v.removeprefix("hkcategoryvaluesleepanalysis")
+    if "awake" in v:
+        return "awake"
+    if "inbed" in v:
+        return "inbed"
+    if "asleep" in v or v in _ASLEEP_SHORT:
+        return "asleep"
+    return None
+
+
+def sleep_metrics(sleep_raw) -> dict:
+    """Derive sleep duration and efficiency from raw stage intervals.
+
+    Returns asleep/in-bed minutes, efficiency, and counts of what was recognised — the counts are
+    what make a null answer diagnosable instead of silent.
+
+    Efficiency uses the same formula as the export backfill (src/import_health_export.py): asleep
+    time also counts as in-bed time, and the result is capped at 100. It is only reported when a
+    real denominator exists (an Awake or InBed interval was actually sent) — if the Shortcut sends
+    asleep stages alone, in-bed equals asleep and efficiency would be a meaningless flat 100%.
+    """
+    out = {"asleep_min": None, "inbed_min": None, "efficiency": None,
+           "intervals": 0, "recognized": 0, "unrecognized": []}
+    if not sleep_raw:
+        return out
     if not isinstance(sleep_raw, list):
         raise NormalizationError("sleep_raw must be a list of {start,end,value}")
-    total = 0.0
+
+    asleep = inbed = 0.0
     counted = 0
+    has_denominator = False
+    unknown: list[str] = []
     for iv in sleep_raw:
-        if str(iv.get("value", "")).strip().lower() not in _ASLEEP:
+        out["intervals"] += 1
+        stage = classify_sleep_stage(iv.get("value"))
+        if stage is None:
+            label = str(iv.get("value", ""))[:40]
+            if label not in unknown:
+                unknown.append(label)
             continue
         try:
             start, end = _parse_ts(iv["start"]), _parse_ts(iv["end"])
         except (KeyError, ValueError) as e:
             raise NormalizationError(f"bad sleep interval {iv!r}: {e}")
         mins = (end - start).total_seconds() / 60.0
-        if mins > 0:
-            total += mins
-            counted += 1
-    return round(total, 1) if counted else None
+        if mins <= 0:
+            continue
+        counted += 1
+        if stage == "asleep":
+            asleep += mins
+            inbed += mins          # asleep time is also in-bed time
+        else:                      # awake / inbed both extend the in-bed window
+            inbed += mins
+            has_denominator = True
+
+    out["recognized"] = counted
+    out["unrecognized"] = unknown
+    if not counted:
+        return out
+    out["asleep_min"] = round(asleep, 1) if asleep else None
+    out["inbed_min"] = round(inbed, 1) if inbed else None
+    if asleep and inbed > 0 and has_denominator:
+        out["efficiency"] = round(min(asleep / inbed * 100, 100), 1)
+    return out
+
+
+def sleep_minutes(sleep_raw) -> float | None:
+    """Minutes asleep from raw stage intervals. None when no usable interval data is present."""
+    return sleep_metrics(sleep_raw)["asleep_min"]
 
 
 def normalize_daily(payload: dict) -> dict:
@@ -95,11 +156,15 @@ def normalize_daily(payload: dict) -> dict:
     # resting_hr: accept clean 'resting_hr' or the Shortcut's string 'resting_heart_rate'.
     resting_hr = _to_float(payload.get("resting_hr", payload.get("resting_heart_rate")), "resting_hr")
 
-    # sleep: accept clean 'sleep_minutes' or derive from raw stage intervals.
+    # sleep: accept clean 'sleep_minutes' or derive from raw stage intervals. Efficiency is
+    # derived the same way, so the live path matches the export backfill instead of staying null.
+    metrics = sleep_metrics(payload.get("sleep_raw"))
     if payload.get("sleep_minutes") is not None:
         sleep_min = _to_float(payload.get("sleep_minutes"), "sleep_minutes")
     else:
-        sleep_min = sleep_minutes(payload.get("sleep_raw"))
+        sleep_min = metrics["asleep_min"]
+    sleep_eff = payload.get("sleep_efficiency")
+    sleep_eff = _to_float(sleep_eff, "sleep_efficiency") if sleep_eff is not None else metrics["efficiency"]
 
     return {
         "person_id": person_id,
@@ -108,7 +173,7 @@ def normalize_daily(payload: dict) -> dict:
         "resting_hr": resting_hr,
         "hrv_ms": _to_float(payload.get("hrv_ms"), "hrv_ms"),
         "sleep_minutes": sleep_min,
-        "sleep_efficiency": _to_float(payload.get("sleep_efficiency"), "sleep_efficiency"),
+        "sleep_efficiency": sleep_eff,
         "active_energy_kcal": _to_float(payload.get("active_energy_kcal"), "active_energy_kcal"),
         "calories": _to_float(payload.get("calories"), "calories"),
         "source": str(payload.get("source") or "apple_watch"),

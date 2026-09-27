@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from server import repo
 from server.auth import require_ingest_token
-from server.normalize import normalize_daily, NormalizationError
+from server.normalize import normalize_daily, sleep_metrics, NormalizationError
 from server.schemas import DailyRaw, BackfillBody, Checkin
 
 router = APIRouter(prefix="/ingest", tags=["ingest"], dependencies=[Depends(require_ingest_token)])
@@ -14,12 +14,24 @@ router = APIRouter(prefix="/ingest", tags=["ingest"], dependencies=[Depends(requ
 
 @router.post("/daily")
 def ingest_daily(payload: DailyRaw):
+    body = payload.model_dump()
     try:
-        row = normalize_daily(payload.model_dump())
+        row = normalize_daily(body)
     except NormalizationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     repo.upsert_daily([row])
-    return {"ok": True, "person_id": row["person_id"], "date": row["date"]}
+    # Echo what the sleep parser actually made of the payload. A null sleep value used to be
+    # indistinguishable from "nothing was sent"; now the Shortcut's response says which it was,
+    # and names any stage label we didn't recognise.
+    m = sleep_metrics(body.get("sleep_raw"))
+    return {
+        "ok": True, "person_id": row["person_id"], "date": row["date"],
+        "sleep": {
+            "minutes": row["sleep_minutes"], "efficiency": row["sleep_efficiency"],
+            "intervals_received": m["intervals"], "intervals_used": m["recognized"],
+            "unrecognized_values": m["unrecognized"],
+        },
+    }
 
 
 @router.post("/backfill")

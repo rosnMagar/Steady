@@ -65,3 +65,49 @@ def test_no_sleep_data_is_none():
 def test_parse_local_date_accepts_both_forms():
     assert parse_local_date("2026-09-26").isoformat() == "2026-09-26"
     assert parse_local_date("2026-09-26T13:46:53-05:00").isoformat() == "2026-09-26"
+
+
+# ── sleep stage naming (regression: full HealthKit identifiers silently yielded no sleep) ──
+from server.normalize import classify_sleep_stage, sleep_metrics
+
+
+def _iv(start, end, value):
+    return {"start": f"Sep 27, 2026 at {start} AM", "end": f"Sep 27, 2026 at {end} AM",
+            "value": value}
+
+
+def test_full_healthkit_identifiers_count_as_sleep():
+    """The export and HealthKit use 'HKCategoryValueSleepAnalysisAsleepCore'; the Shortcuts picker
+    uses 'Core'. Both must work — only the short form did, so sleep silently came through empty."""
+    for v in ("Core", "AsleepCore", "HKCategoryValueSleepAnalysisAsleepCore"):
+        assert classify_sleep_stage(v) == "asleep", v
+        assert sleep_metrics([_iv("1:00", "2:00", v)])["asleep_min"] == 60.0
+
+
+def test_awake_is_never_counted_as_sleep():
+    for v in ("Awake", "HKCategoryValueSleepAnalysisAwake"):
+        assert classify_sleep_stage(v) == "awake", v
+    assert sleep_metrics([_iv("1:00", "2:00", "Awake")])["asleep_min"] is None
+
+
+def test_inbed_recognised_and_not_sleep():
+    for v in ("InBed", "HKCategoryValueSleepAnalysisInBed"):
+        assert classify_sleep_stage(v) == "inbed", v
+
+
+def test_efficiency_matches_asleep_over_inbed():
+    m = sleep_metrics([_iv("1:00", "3:00", "Core"), _iv("3:00", "3:30", "Awake")])
+    assert m["asleep_min"] == 120.0 and m["inbed_min"] == 150.0
+    assert m["efficiency"] == 80.0
+
+
+def test_efficiency_is_none_without_a_real_denominator():
+    """Asleep stages alone would make in-bed == asleep, i.e. a meaningless flat 100%."""
+    assert sleep_metrics([_iv("1:00", "3:00", "Core")])["efficiency"] is None
+
+
+def test_unrecognised_values_are_reported_not_silent():
+    m = sleep_metrics([_iv("1:00", "2:00", "Bogus")])
+    assert m["asleep_min"] is None
+    assert m["intervals"] == 1 and m["recognized"] == 0
+    assert m["unrecognized"] == ["Bogus"]
