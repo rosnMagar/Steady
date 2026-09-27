@@ -1,0 +1,85 @@
+name: CI/CD
+
+# Tests run on every push and PR. Deploy to EC2 runs only when main is updated.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Build + test (validates backend and frontend) ────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+      - name: Run tests
+        # Snowflake-backed tests skip automatically when no creds are present (offline CI).
+        run: pytest -q
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build frontend
+        run: |
+          npm --prefix web ci
+          VITE_USE_API=1 npm --prefix web run build
+
+  # ── 2. Deploy to EC2 (main only, after tests pass) ──────────────────────────
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Set APP_DIR to the path on the box (yours is /opt/Steady). Keep it consistent with the box.
+    env:
+      APP_DIR: /opt/Steady
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the production frontend on the runner (fast; keeps the small EC2 box out of it).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build frontend
+        run: |
+          npm --prefix web ci
+          VITE_USE_API=1 npm --prefix web run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync code + built frontend to EC2
+        # Ships everything incl. web/dist; never touches the box's .env, venv, or runtime SQLite db.
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.venv' \
+            --exclude 'node_modules' \
+            --exclude '.env' \
+            --exclude 'data/steady_app.db' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${APP_DIR}/"
+
+      - name: Install backend deps + restart service on EC2
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+            "cd ${APP_DIR} \
+              && (test -d .venv || python3 -m venv .venv) \
+              && .venv/bin/pip install -q -r requirements.txt \
+              && sudo systemctl restart steady \
+              && sleep 2 && curl -fsS http://localhost/health"
