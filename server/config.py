@@ -29,3 +29,7 @@ HEADS_UP_RISK = 0.5
 # participant (real Apple Watch data) so the caregiver view features them; if that id isn't scored
 # yet, resolve() falls back to the highest-risk person. Override in .env to feature someone else.
 DEMO_CAREGIVER_ID = get("DEMO_CAREGIVER_ID", "p_roshan")
+
+# Display name for the featured live participant, shown in the caregiver view and the cohort in place
+# of the pseudonymous hashed name. Override in .env.
+DEMO_CAREGIVER_NAME = get("DEMO_CAREGIVER_NAME", "Roshan Magar")

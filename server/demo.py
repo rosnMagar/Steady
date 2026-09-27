@@ -6,6 +6,8 @@ people in the demo, without inventing any clinical facts.
 """
 import hashlib
 
+from server.config import DEMO_CAREGIVER_ID, DEMO_CAREGIVER_NAME
+
 # The caregiver app is hard-wired to "p_demo" (web/src/pages/caregiver/*). We resolve that alias
 # to the single highest-risk real person so Today, Heads-up and the cohort drawer all tell one story.
 DEMO_ALIAS = "p_demo"
@@ -26,8 +28,9 @@ def _h(person_id: str) -> int:
 
 
 def display_name(person_id: str) -> str:
-    if person_id == DEMO_ALIAS:
-        return DEMO_NAME
+    # The featured live participant (and the alias that resolves to them) shows their real name.
+    if person_id == DEMO_ALIAS or person_id == DEMO_CAREGIVER_ID:
+        return DEMO_CAREGIVER_NAME
     h = _h(person_id)
     return f"{_FIRST[h % len(_FIRST)]} {_LAST_INITIALS[(h // 7) % len(_LAST_INITIALS)]}."
 
