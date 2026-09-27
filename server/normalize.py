@@ -52,8 +52,36 @@ def parse_local_date(value: str) -> date:
         raise NormalizationError(f"unparseable date: {value!r}")
 
 
+# How a sleep interval's timestamps can arrive. The Shortcut's Format Date action decides the
+# shape, so accept the ones it can produce rather than the single default: medium date + short
+# time ("Sep 26, 2026 at 1:16 AM"), its 24-hour equivalent in a 24-hour locale, and ISO 8601.
+_TS_FORMATS = (
+    "%b %d, %Y at %I:%M %p",
+    "%b %d, %Y at %H:%M",
+    "%b %d, %Y, %I:%M %p",
+    "%b %d, %Y, %H:%M",
+)
+
+
 def _parse_ts(s: str) -> datetime:
-    return datetime.strptime(_clean_spaces(s), "%b %d, %Y at %I:%M %p")
+    cleaned = _clean_spaces(s)
+    for fmt in _TS_FORMATS:
+        try:
+            return datetime.strptime(cleaned, fmt)
+        except ValueError:
+            continue
+    try:
+        return datetime.fromisoformat(cleaned)
+    except ValueError:
+        raise ValueError(f"unrecognised timestamp format: {s!r}")
+
+
+def _minutes_between(start: datetime, end: datetime) -> float:
+    """Elapsed minutes, tolerating one side being timezone-aware and the other naive (which
+    subtraction would otherwise refuse) — the phone can format the two ends inconsistently."""
+    if (start.tzinfo is None) != (end.tzinfo is None):
+        start, end = start.replace(tzinfo=None), end.replace(tzinfo=None)
+    return (end - start).total_seconds() / 60.0
 
 
 def classify_sleep_stage(value) -> str | None:
@@ -112,7 +140,7 @@ def sleep_metrics(sleep_raw) -> dict:
             start, end = _parse_ts(iv["start"]), _parse_ts(iv["end"])
         except (KeyError, ValueError) as e:
             raise NormalizationError(f"bad sleep interval {iv!r}: {e}")
-        mins = (end - start).total_seconds() / 60.0
+        mins = _minutes_between(start, end)
         if mins <= 0:
             continue
         counted += 1

@@ -111,3 +111,27 @@ def test_unrecognised_values_are_reported_not_silent():
     assert m["asleep_min"] is None
     assert m["intervals"] == 1 and m["recognized"] == 0
     assert m["unrecognized"] == ["Bogus"]
+
+
+# ── timestamp shapes: the Shortcut's Format Date action decides these, so accept what it emits ──
+
+@pytest.mark.parametrize("start,end", [
+    ("Sep 27, 2026 at 1:00 AM", "Sep 27, 2026 at 2:00 AM"),   # medium date + short time (default)
+    ("Sep 27, 2026 at 01:00", "Sep 27, 2026 at 02:00"),       # 24-hour locale
+    ("Sep 27, 2026, 1:00 AM", "Sep 27, 2026, 2:00 AM"),       # comma instead of "at"
+    ("2026-09-27T01:00:00", "2026-09-27T02:00:00"),           # ISO 8601
+    ("2026-09-27T01:00:00-05:00", "2026-09-27T02:00:00-05:00"),
+])
+def test_interval_timestamp_formats_accepted(start, end):
+    assert sleep_metrics([{"start": start, "end": end, "value": "Core"}])["asleep_min"] == 60.0
+
+
+def test_mixed_aware_and_naive_interval_ends_do_not_crash():
+    m = sleep_metrics([{"start": "2026-09-27T01:00:00-05:00", "end": "2026-09-27T02:00:00",
+                        "value": "Core"}])
+    assert m["asleep_min"] == 60.0
+
+
+def test_unparseable_timestamp_is_rejected_loudly():
+    with pytest.raises(NormalizationError):
+        sleep_metrics([{"start": "whenever", "end": "later", "value": "Core"}])

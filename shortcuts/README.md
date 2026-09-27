@@ -20,7 +20,9 @@ bearer-token header. We send to a throwaway inbox, not our server.
    - **Resting HR:** Find Health Samples (Resting Heart Rate, Sort **Latest**, **Limit 1**) →
      Calculate Statistics → **Average** → rename `RestingHR`.
    - **Sleep:** Sleep Analysis is stored as intervals and is fiddly — for the SPIKE, skip it. If
-     steps + resting HR arrive, the gate passes.
+     steps + resting HR arrive, the gate passes. **Do not skip it in the real Daily Sync** — see
+     [Adding sleep to the Daily Sync](#adding-sleep-to-the-daily-sync-required) below. Skipping it
+     there is why sleep silently stayed empty.
    Note any type your watch/iOS can't provide.
 4. Add a **Text** action. **Do NOT type the bracketed names as text** — they must be inserted as
    variable chips (colored tokens), or you'll POST the literal placeholder. Type only the quotes,
@@ -71,13 +73,66 @@ as the header `Authorization: Bearer <INGEST_TOKEN>`; the server accepts the tok
 leading `Bearer `, so either form works).
 
 1. **Daily Sync** (Automation, 9 PM): same as the spike but POST to `/ingest/daily`, and add
-   `hrv_ms` (Heart Rate Variability) and `active_energy_kcal` (Active Energy) if available.
+   `hrv_ms` (Heart Rate Variability), `active_energy_kcal` (Active Energy), and `sleep_raw`
+   (below — the spike skips it, the real shortcut must not).
 2. **Backfill** (run once, manually): loop over the last 30–60 days building an array of daily
    objects, POST to `/ingest/backfill`. Gives the model a baseline before demo day. **The pipeline
    needs ≥ 30 usable days** before it will forecast a live person (fewer and they're skipped as
    "baseline not ready").
 3. **Daily Check-in** (Automation, evening): **Ask for Input** (Number, "How heavy did today feel?
    1–5"), optionally **Choose from Menu** for tags, POST to `/ingest/checkin`.
+
+## Adding sleep to the Daily Sync (required)
+
+Sleep is the single strongest signal in the model, and unlike steps or heart rate it can't be
+reduced to one number by Calculate Statistics — Health stores it as a list of **stage intervals**
+(`Core`, `Deep`, `REM`, `Awake`, `In Bed`). So the shortcut sends the intervals raw as `sleep_raw`
+and the server derives both duration and efficiency from them (`server/normalize.py`).
+
+Add these actions to Daily Sync, **before** the Text action that builds the JSON:
+
+1. **Find Health Samples** — Sample Type **Sleep Analysis**, Sort by **Start Date**, and add the
+   filter **Start Date · is in the last · 1 · days**. Do *not* use period "Today": sleep that began
+   before midnight would be dropped.
+   - **Include the `Awake` and `In Bed` stages** — don't filter them out. They are the denominator
+     for sleep efficiency. Without them you get duration but efficiency stays null, and the live
+     days won't line up with the 100 days backfilled from your Health export.
+2. **Repeat with Each** (input = the Find result). Inside the loop:
+   - **Text** action containing exactly this, with the three chips inserted as variables (tap
+     **Repeat Item** → pick the property), not typed as words:
+     ```
+     {"start":"<Repeat Item ▸ Start Date>","end":"<Repeat Item ▸ End Date>","value":"<Repeat Item ▸ Value>"}
+     ```
+   - **Add to Variable** → name it `SleepParts`.
+3. After the loop: **Combine Text** — input `SleepParts`, Separator **Custom** = `, ` (comma and a
+   space). Rename the result `SleepJoined`.
+4. In the JSON Text action, add the key, with `SleepJoined` inserted as a chip between the brackets:
+   ```
+   "sleep_raw":[<SleepJoined>]
+   ```
+   If there was no sleep data the variable is empty and this sends `[]`, which is valid.
+
+**Timestamps:** leave the Start/End Date chips on their default format (`Sep 26, 2026 at 1:16 AM`).
+If you tap a chip and set Format Date, ISO 8601 and 24-hour times are also accepted — but a
+free-form custom format is not, and the server will reject the post with a 422.
+
+### Checking it worked
+
+`/ingest/daily` echoes what the parser made of the payload, so the Shortcut's own response answers
+this without a Snowflake query. Add a **Show Result** (or **Quick Look**) action after Get Contents
+of URL and read the `sleep` block:
+
+```json
+"sleep": {"minutes": 399.5, "efficiency": 82.1,
+          "intervals_received": 14, "intervals_used": 14, "unrecognized_values": []}
+```
+
+| What you see | What it means |
+|---|---|
+| `intervals_received: 0` | The shortcut isn't sending `sleep_raw` — steps 1–4 above aren't in it yet |
+| `intervals_received > 0`, `intervals_used: 0` | The stage labels weren't recognised; `unrecognized_values` names them verbatim — send those and they can be added |
+| `minutes` set, `efficiency: null` | No `Awake` / `In Bed` intervals arrived — check the step 1 filter isn't excluding them |
+| all four populated | Working |
 
 ## Making the ingested data show up in the app (scoring step)
 
