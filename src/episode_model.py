@@ -1,7 +1,10 @@
 """Reframed forecast: predict an ELEVATED-LOAD EPISODE in the next 1-3 days (classification).
 
-Literature (next-day stress prediction) reports F1>0.8 for this framing, where point-value
-regression fails. Target at day t: is the mean smoothed load over t+1..t+3 above the person's own
+Literature: next-day stress *classification* works where point-value regression fails, but the
+headline F1>0.8 numbers are lab/internal-validation results. On real-world external data the same
+models drop to ~F1 0.58, and personalized approaches report F1 0.62-0.66 (see docs/RESEARCH.md
+section 5). That real-world band is the bar this model should be judged against, not the lab one.
+Target at day t: is the mean smoothed load over t+1..t+3 above the person's own
 elevated threshold (their 70th percentile)? Features use only info available at day t.
 
 Baselines: base rate, and a PERSISTENCE classifier (elevated-today -> elevated-next). The model
