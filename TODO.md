@@ -68,6 +68,12 @@
 - [ ] Tunnel/hosting; Shortcuts daily-sync, check-in, backfill wired; 30-60 days backfilled
       (endpoints + real-payload ingest confirmed live; tunnel + hosting DOCUMENTED in shortcuts/README.md
       — cloudflared to :8000, same URL serves API+UI; Cloudflare tunnel + on-phone backfill need the device)
+- [x] Ingest triggers live rescore automatically — /ingest/daily and /ingest/backfill schedule
+      src.score_live.run([person_id]) as a FastAPI BackgroundTask when source='apple_watch'; backfill
+      dedupes so a 30-day POST fires ONE rescore per person, not 30. Then invalidates the 60s read
+      cache so the next dashboard fetch sees the new state. Errors are logged, never raised (an
+      ingest never fails because of a downstream refresh; nightly SQL Task remains a backstop).
+      3 new tests in tests/test_ingest.py cover the scheduling; all 81 tests pass.
 - [x] Snowflake Task for nightly refresh — sql/05_tasks.sql: REFRESH_STEADY() proc (ML.FORECAST retrain
       -> FORECASTS; steady_episode!PREDICT -> RISK; status rule -> ALERTS) + nightly TASK.
       APPLIED + RESUMED 2026-09-29. Schedule: 'USING CRON 59 23 * * * America/Chicago' (11:59 PM CDT

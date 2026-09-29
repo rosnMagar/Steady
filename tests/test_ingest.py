@@ -29,11 +29,16 @@ DAILY = {
 
 @pytest.fixture(autouse=True)
 def _capture_writes(monkeypatch):
-    """Capture upserts instead of writing to Snowflake, and force a known token."""
-    calls = {"daily": []}
+    """Capture upserts and background triggers instead of writing to Snowflake, and force a known
+    token. TestClient runs BackgroundTasks synchronously after the response, so the trigger must
+    be stubbed here — otherwise the real src.score_live would try to open a Snowflake connection
+    during offline tests."""
+    calls = {"daily": [], "rescored": []}
     monkeypatch.setattr(repo, "upsert_daily", lambda rows: calls["daily"].append(rows) or len(rows))
     monkeypatch.setattr(repo, "upsert_checkin", lambda *a, **k: None)
     monkeypatch.setattr("server.auth.INGEST_TOKEN", TOKEN)
+    monkeypatch.setattr("server.routes_ingest._trigger_live_rescore",
+                        lambda pid: calls["rescored"].append(pid))
     return calls
 
 
@@ -85,6 +90,39 @@ def test_backfill_ok():
     r = client.post("/ingest/backfill", json=body, headers=AUTH)
     assert r.status_code == 200
     assert r.json() == {"ok": True, "count": 2}
+
+
+# ── background live-rescore scheduling ───────────────────────────────────────
+def test_daily_schedules_live_rescore(_capture_writes):
+    """An apple_watch daily POST should return fast AND schedule a rescore. The rescore is what
+    promotes the new RAW_DAILY row into FEATURES/STRAIN_SCORE/RISK/ALERTS — without it, the
+    dashboard would keep showing yesterday's data until the nightly Snowflake Task."""
+    r = client.post("/ingest/daily", json=DAILY, headers=AUTH)
+    assert r.status_code == 200
+    assert _capture_writes["rescored"] == ["p_test"]
+
+
+def test_daily_does_not_schedule_rescore_for_non_watch_source(_capture_writes):
+    """LifeSnaps and any non-apple_watch source is pre-scored; per-ingest rescoring would waste
+    warehouse credits retraining an ML.FORECAST that nothing consumes."""
+    lifesnaps = dict(DAILY, source="lifesnaps")
+    r = client.post("/ingest/daily", json=lifesnaps, headers=AUTH)
+    assert r.status_code == 200
+    assert _capture_writes["rescored"] == []
+
+
+def test_backfill_schedules_one_rescore_per_person(_capture_writes):
+    """A 30-day backfill for one person should trigger ONE rescore (score_live rebuilds the whole
+    series each call), not 30. Two people in the same backfill should trigger two."""
+    body = {"days": [
+        dict(DAILY, date="2026-09-24"),
+        dict(DAILY, date="2026-09-25"),
+        dict(DAILY, date="2026-09-26"),
+        dict(DAILY, person_id="p_other", date="2026-09-26"),
+    ]}
+    r = client.post("/ingest/backfill", json=body, headers=AUTH)
+    assert r.status_code == 200
+    assert sorted(_capture_writes["rescored"]) == ["p_other", "p_test"]
 
 
 def test_checkin_validation_stress_range():
