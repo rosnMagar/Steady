@@ -21,45 +21,49 @@ USE SCHEMA PUBLIC;
 
 -- Status thresholds mirror server/repo.py::status_of exactly:
 --   heads_up if risk >= 0.5; else building if the 7-day forecast peak crosses the person's own p75.
-CREATE OR REPLACE PROCEDURE REFRESH_STEADY()
+-- Owner's-rights SQL procs resolve unqualified names against the OWNER's default namespace, not
+-- the session's, so every object below is fully qualified as STEADY.PUBLIC.<name>. Otherwise a
+-- CALL from a role with a different default DB (or the Task's own context) fails with
+-- "Object 'X.Y.STRAIN_SCORE' does not exist or not authorized".
+CREATE OR REPLACE PROCEDURE STEADY.PUBLIC.REFRESH_STEADY()
 RETURNS STRING
 LANGUAGE SQL
 AS
 $$
 BEGIN
     -- 1. Forecast: retrain the multi-series model on the current strain-score history and project 7 days.
-    CREATE OR REPLACE SNOWFLAKE.ML.FORECAST steady_load_model(
-        INPUT_DATA     => TABLE(SELECT person_id, date, strain_score FROM STRAIN_SCORE),
+    CREATE OR REPLACE SNOWFLAKE.ML.FORECAST STEADY.PUBLIC.steady_load_model(
+        INPUT_DATA     => TABLE(SELECT person_id, date, strain_score FROM STEADY.PUBLIC.STRAIN_SCORE),
         SERIES_COLNAME => 'PERSON_ID',
         TIMESTAMP_COLNAME => 'DATE',
         TARGET_COLNAME => 'STRAIN_SCORE');
 
-    TRUNCATE TABLE FORECASTS;
-    INSERT INTO FORECASTS (person_id, date, forecast, lower_bound, upper_bound)
+    TRUNCATE TABLE STEADY.PUBLIC.FORECASTS;
+    INSERT INTO STEADY.PUBLIC.FORECASTS (person_id, date, forecast, lower_bound, upper_bound)
         SELECT TRIM(series::string, '"'), ts::date, forecast, lower_bound, upper_bound
-        FROM   TABLE(steady_load_model!FORECAST(FORECASTING_PERIODS => 7));
+        FROM   TABLE(STEADY.PUBLIC.steady_load_model!FORECAST(FORECASTING_PERIODS => 7));
 
     -- 2. Re-score episode risk on each person's latest feature row (model trained in Python step).
-    CREATE OR REPLACE TABLE RISK AS
+    CREATE OR REPLACE TABLE STEADY.PUBLIC.RISK AS
         WITH latest AS (
-            SELECT * FROM FEATURES
+            SELECT * FROM STEADY.PUBLIC.FEATURES
             QUALIFY ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY date DESC) = 1
         )
         SELECT person_id, date,
-               steady_episode!PREDICT(
+               STEADY.PUBLIC.steady_episode!PREDICT(
                    OBJECT_DELETE(OBJECT_CONSTRUCT(*), 'PERSON_ID', 'DATE', 'Y')
                ):probability['1']::float AS risk
         FROM latest;
 
     -- 3. Derive status (same rule as the API) and rebuild ALERTS.
-    TRUNCATE TABLE ALERTS;
-    INSERT INTO ALERTS (person_id, date, status, rule)
+    TRUNCATE TABLE STEADY.PUBLIC.ALERTS;
+    INSERT INTO STEADY.PUBLIC.ALERTS (person_id, date, status, rule)
         WITH p75 AS (
             SELECT person_id,
                    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY strain_score) AS p75
-            FROM STRAIN_SCORE GROUP BY person_id
+            FROM STEADY.PUBLIC.STRAIN_SCORE GROUP BY person_id
         ), fpeak AS (
-            SELECT person_id, MAX(forecast) AS fpeak FROM FORECASTS GROUP BY person_id
+            SELECT person_id, MAX(forecast) AS fpeak FROM STEADY.PUBLIC.FORECASTS GROUP BY person_id
         )
         SELECT r.person_id, r.date,
                CASE
@@ -68,7 +72,7 @@ BEGIN
                    ELSE 'steady'
                END AS status,
                'risk ' || TO_VARCHAR(r.risk, '0.00') AS rule
-        FROM RISK r
+        FROM STEADY.PUBLIC.RISK r
         LEFT JOIN p75   p ON p.person_id = r.person_id
         LEFT JOIN fpeak f ON f.person_id = r.person_id;
 
@@ -76,11 +80,12 @@ BEGIN
 END;
 $$;
 
--- Nightly Task. Set the warehouse to your trial warehouse before applying. Tasks are created SUSPENDED;
--- resume to activate. 08:00 UTC ~= overnight in the US.
+-- Nightly Task. Set the warehouse to your trial warehouse before applying. Tasks are created
+-- SUSPENDED; resume to activate. Runs at 23:59 America/Chicago every day — the IANA name handles
+-- the CST/CDT switch automatically, so this stays "11:59 PM local" through DST.
 CREATE OR REPLACE TASK REFRESH_STEADY_NIGHTLY
     WAREHOUSE = COMPUTE_WH               -- <-- change to your warehouse name
-    SCHEDULE  = 'USING CRON 0 8 * * * UTC'
+    SCHEDULE  = 'USING CRON 59 23 * * * America/Chicago'
 AS
     CALL REFRESH_STEADY();
 

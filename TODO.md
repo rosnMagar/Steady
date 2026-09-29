@@ -69,10 +69,12 @@
       (endpoints + real-payload ingest confirmed live; tunnel + hosting DOCUMENTED in shortcuts/README.md
       — cloudflared to :8000, same URL serves API+UI; Cloudflare tunnel + on-phone backfill need the device)
 - [x] Snowflake Task for nightly refresh — sql/05_tasks.sql: REFRESH_STEADY() proc (ML.FORECAST retrain
-      -> FORECASTS; steady_episode!PREDICT -> RISK; status rule -> ALERTS) + nightly TASK. FORECAST table-fn
-      + PREDICT(OBJECT_DELETE(...)) syntax validated read-only against live account. NOT APPLIED (retrains
-      models + creates Tasks = credits; apply intentionally). CAVEAT: FEATURES/STRAIN_SCORE are Python
-      (src/), so schedule that pipeline before this Task; SQL Task only refreshes downstream.
+      -> FORECASTS; steady_episode!PREDICT -> RISK; status rule -> ALERTS) + nightly TASK.
+      APPLIED + RESUMED 2026-09-29. Schedule: 'USING CRON 59 23 * * * America/Chicago' (11:59 PM CDT
+      today, auto-shifts to CST after Nov 2 via IANA name). SHOW TASKS: state=started. CAVEAT:
+      FEATURES/STRAIN_SCORE are Python (src/), so the SQL Task only refreshes downstream — fine for
+      the demo cohort (FEATURES pre-populated) but for the live Apple Watch person, `score_live.py`
+      still runs separately.
 
 ## Phase 5 — UI (parallel with Phase 2, using mocks)
 - [x] Design tokens, base components, light/dark (web/ Vite+React+TS+Tailwind; builds clean)
@@ -89,7 +91,8 @@
 - [ ] Pre-loaded demo data; core path independent of the tunnel
 - [ ] Limitations/consent slide; architecture slide showing Snowflake's role
 - [ ] Backup screen recording; README with setup and citations
-- [ ] Devpost writeup and submission
+- [ ] Devpost writeup and submission (writeup DRAFTED in DEVPOST.md — needs live URL, video link,
+      screenshots, and the submission itself)
 
 ## Scope cuts (in order)
 Simplify stage-1 model -> drop region filter -> drop dark mode -> drop Methods charts -> drop Cortex Search -> drop live sync.
